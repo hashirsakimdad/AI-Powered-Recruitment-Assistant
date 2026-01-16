@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}Candidate Dashboard - AI Recruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Candidate Dashboard</h2>
+      <p class="text-muted mb-0">Discover jobs and get instant AI-powered feedback</p>
+    </div>
+  </div>
+
+  <!-- Job Search and Filters -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+      <form method="GET" action="{{ url_for('search_jobs') }}" id="searchForm">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-search me-1 text-primary"></i>Search Jobs
+            </label>
+            <input 
+              type="text" 
+              name="q" 
+              class="form-control form-control-lg" 
+              placeholder="Search by job title, skills, company, or keywords..."
+              value="{{ search_query or '' }}"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-briefcase me-1 text-primary"></i>Job Type
+            </label>
+            <select name="job_type" class="form-select form-select-lg">
+              <option value="">All Types</option>
+              <option value="Full-time" {% if selected_job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+              <option value="Part-time" {% if selected_job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+              <option value="Internship" {% if selected_job_type == 'Internship' %}selected{% endif %}>Internship</option>
+              <option value="Contract" {% if selected_job_type == 'Contract' %}selected{% endif %}>Contract</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-geo-alt me-1 text-primary"></i>Work Mode
+            </label>
+            <select name="work_mode" class="form-select form-select-lg">
+              <option value="">All Modes</option>
+              <option value="Remote" {% if selected_work_mode == 'Remote' %}selected{% endif %}>Remote</option>
+              <option value="Onsite" {% if selected_work_mode == 'Onsite' %}selected{% endif %}>Onsite</option>
+              <option value="Hybrid" {% if selected_work_mode == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-3">
+          <button type="submit" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-search me-2"></i>Search Jobs
+          </button>
+          <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-outline-secondary btn-lg px-4 ms-2">
+            <i class="bi bi-arrow-clockwise me-2"></i>Reset
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Open Jobs Section -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-bottom py-3">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-briefcase me-2 text-primary"></i>Available Jobs
+            {% if jobs %}<span class="badge bg-primary ms-2">{{ jobs|length }}</span>{% endif %}
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if jobs %}
+          <div class="job-list">
+            {% for job in jobs %}
+            <div class="job-card mb-3 p-4 border rounded-3 hover-lift">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="flex-grow-1">
+                  <h5 class="fw-bold mb-2">
+                    <a href="{{ url_for('job_details', job_id=job.id) }}" class="text-decoration-none text-primary">
+                      {{ job.title }}
+                    </a>
+                  </h5>
+                  {% if job.company_name %}
+                  <p class="text-muted mb-1">
+                    <i class="bi bi-building me-1"></i>{{ job.company_name }}
+                    {% if job.location %}<span class="ms-2"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>{% endif %}
+                  </p>
+                  {% endif %}
+                  <div class="d-flex flex-wrap gap-2 mb-2">
+                    {% if job.job_type %}
+                    <span class="badge bg-primary-subtle text-primary">{{ job.job_type }}</span>
+                    {% endif %}
+                    {% if job.work_mode %}
+                    <span class="badge bg-info-subtle text-info">{{ job.work_mode }}</span>
+                    {% endif %}
+                    {% if job.experience_level %}
+                    <span class="badge bg-secondary-subtle text-secondary">{{ job.experience_level }}</span>
+                    {% endif %}
+                  </div>
+                  <p class="text-muted small mb-3">{{ job.description[:200] }}{% if job.description|length > 200 %}...{% endif %}</p>
+                  <div class="mb-3">
+                    <small class="text-muted fw-semibold d-block mb-2">Required Skills:</small>
+                    <div class="skill-tags">
+                      {% for skill in job.required_skills.split(',')[:6] %}
+                      <span class="badge bg-secondary-subtle text-secondary me-1 mb-1">{{ skill.strip() }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ url_for('job_details', job_id=job.id) }}" class="btn btn-outline-primary btn-sm flex-fill">
+                  <i class="bi bi-eye me-1"></i>View Details
+                </a>
+                <button class="btn btn-primary btn-sm flex-fill" data-bs-toggle="modal" data-bs-target="#uploadModal{{ job.id }}">
+                  <i class="bi bi-upload me-1"></i>Apply Now
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload Modal -->
+            <div class="modal fade" id="uploadModal{{ job.id }}" tabindex="-1">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Apply for {{ job.title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form action="{{ url_for('upload_resume', job_id=job.id) }}" method="POST" enctype="multipart/form-data" id="uploadForm{{ job.id }}">
+                      <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="John Doe" required />
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="john@example.com" required />
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Resume (PDF only)</label>
+                        <div class="upload-area" id="uploadArea{{ job.id }}">
+                          <input type="file" name="resume" id="fileInput{{ job.id }}" class="d-none" accept=".pdf" required />
+                          <div class="upload-content text-center p-5">
+                            <i class="bi bi-cloud-upload display-4 text-muted mb-3"></i>
+                            <p class="mb-2 fw-semibold">Drag & drop your resume here</p>
+                            <p class="text-muted small mb-3">or</p>
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput{{ job.id }}').click()">
+                              Browse Files
+                            </button>
+                            <p class="text-muted small mt-3 mb-0">Supported format: PDF only</p>
+                          </div>
+                          <div class="upload-progress d-none">
+                            <div class="progress mb-2">
+                              <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                            </div>
+                            <p class="text-center small mb-0">
+                              <span class="status-text">Processing...</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                          <i class="bi bi-upload me-2"></i>Upload & Analyze
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <p class="text-muted mt-3">No jobs found. Try adjusting your search or filters.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- My Submissions Section -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom py-3">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-file-earmark-text me-2 text-primary"></i>My Applications
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if submissions %}
+          <div class="submissions-list">
+            {% for sub in submissions %}
+            <div class="submission-card mb-3 p-4 border rounded-3 hover-lift">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h6 class="fw-bold mb-1">{{ sub.job.title }}</h6>
+                  <p class="text-muted small mb-0">
+                    <i class="bi bi-calendar me-1"></i>{{ sub.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                  </p>
+                </div>
+                <div class="text-end">
+                  <div class="score-badge mb-2">
+                    <span class="badge {% if sub.score >= 70 %}bg-success{% elif sub.score >= 50 %}bg-warning{% else %}bg-danger{% endif %} fs-6 px-3 py-2">
+                      {{ sub.score }}% Match
+                    </span>
+                  </div>
+                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#feedback{{ sub.id }}">
+                    <i class="bi bi-chevron-down me-1"></i>View Details
+                  </button>
+                </div>
+              </div>
+              
+              <div class="collapse" id="feedback{{ sub.id }}">
+                <div class="feedback-content pt-3 border-top">
+                  {% if sub.explanation %}
+                  {% set feedback = sub.explanation.get('feedback', {}) %}
+                  {% set scores = sub.explanation.get('scores', {}) %}
+                  
+                  <!-- Score Breakdown -->
+                  {% if scores %}
+                  <div class="mb-3">
+                    <h6 class="fw-semibold mb-2">Score Breakdown</h6>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <div class="score-item p-2 bg-light rounded">
+                          <small class="text-muted d-block">Semantic Score</small>
+                          <strong>{{ scores.get('semantic_score', 0) }}%</strong>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="score-item p-2 bg-light rounded">
+                          <small class="text-muted d-block">Skill Alignment</small>
+                          <strong>{{ scores.get('skill_alignment', 0) }}%</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                  
+                  <!-- Feedback Summary -->
+                  {% if feedback.get('summary') %}
+                  <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Summary:</strong> {{ feedback.get('summary') }}
+                  </div>
+                  {% endif %}
+                  
+                  <!-- Suggestions -->
+                  {% if feedback.get('suggestions') %}
+                  <div class="mb-3">
+                    <h6 class="fw-semibold mb-2">
+                      <i class="bi bi-lightbulb me-2 text-warning"></i>AI Suggestions
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                      {% for suggestion in feedback.get('suggestions', [])[:5] %}
+                      <li class="mb-2">
+                        <i class="bi bi-arrow-right-circle text-primary me-2"></i>
+                        <span>{{ suggestion }}</span>
+                      </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  {% endif %}
+                  
+                  <!-- Missing Skills -->
+                  {% if feedback.get('missing_skills') %}
+                  <div class="mb-3">
+                    <h6 class="fw-semibold mb-2">
+                      <i class="bi bi-exclamation-triangle me-2 text-danger"></i>Missing Skills
+                    </h6>
+                    <div class="skill-tags">
+                      {% for skill in feedback.get('missing_skills', []) %}
+                      <span class="badge bg-danger-subtle text-danger me-1">{{ skill }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-file-earmark-plus display-1 text-muted"></i>
+            <p class="text-muted mt-3">No submissions yet. Upload your first resume to get AI-powered feedback!</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

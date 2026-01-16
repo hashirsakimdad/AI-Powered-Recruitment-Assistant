@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Create Job Posting - AI Recruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold mb-1">Create Job Posting</h2>
+          <p class="text-muted mb-0">Add a new job position to start receiving candidate applications</p>
+        </div>
+        <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+      </div>
+      
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom py-3">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-file-earmark-plus me-2 text-primary"></i>Job Details
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <form method="POST" id="jobForm">
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-briefcase me-1 text-primary"></i>Job Title
+              </label>
+              <input 
+                type="text" 
+                name="title" 
+                class="form-control form-control-lg" 
+                placeholder="e.g., Senior Software Engineer"
+                required 
+                autofocus
+              />
+              <small class="text-muted">Enter a clear and descriptive job title</small>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-building me-1 text-primary"></i>Company Name
+                </label>
+                <input 
+                  type="text" 
+                  name="company_name" 
+                  class="form-control form-control-lg" 
+                  placeholder="Your Company Name"
+                />
+              </div>
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-geo-alt me-1 text-primary"></i>Location
+                </label>
+                <input 
+                  type="text" 
+                  name="location" 
+                  class="form-control form-control-lg" 
+                  placeholder="City, State or Remote"
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-4">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-briefcase me-1 text-primary"></i>Job Type
+                </label>
+                <select name="job_type" class="form-select form-select-lg" required>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-4">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-geo-alt me-1 text-primary"></i>Work Mode
+                </label>
+                <select name="work_mode" class="form-select form-select-lg" required>
+                  <option value="Remote">Remote</option>
+                  <option value="Onsite">Onsite</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-4">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-person-badge me-1 text-primary"></i>Experience Level
+                </label>
+                <select name="experience_level" class="form-select form-select-lg">
+                  <option value="">Any Level</option>
+                  <option value="Entry">Entry Level</option>
+                  <option value="Mid">Mid Level</option>
+                  <option value="Senior">Senior Level</option>
+                  <option value="Executive">Executive</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-tags me-1 text-primary"></i>Required Skills
+              </label>
+              <input 
+                type="text" 
+                name="required_skills" 
+                class="form-control form-control-lg" 
+                placeholder="Python, SQL, React, AWS, Docker"
+                required 
+              />
+              <small class="text-muted">Separate multiple skills with commas</small>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-file-text me-1 text-primary"></i>Job Description
+              </label>
+              <textarea 
+                name="description" 
+                rows="8" 
+                class="form-control" 
+                placeholder="Describe the role, responsibilities, qualifications, and what you're looking for in a candidate..."
+                required
+              ></textarea>
+              <small class="text-muted">Provide a detailed description to help AI match candidates accurately</small>
+            </div>
+            
+            <div class="d-flex gap-3 pt-3">
+              <button class="btn btn-primary btn-lg px-4" type="submit">
+                <i class="bi bi-check-circle me-2"></i>Create Job Posting
+              </button>
+              <a class="btn btn-outline-secondary btn-lg px-4" href="{{ url_for('recruiter_dashboard') }}">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

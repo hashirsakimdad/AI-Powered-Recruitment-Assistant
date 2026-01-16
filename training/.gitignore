@@ -1,0 +1,20 @@
+# Training data (may contain sensitive information)
+data/
+*.json
+
+# Trained models
+models/
+*.pkl
+*.pth
+*.pt
+*.h5
+
+# Training outputs
+logs/
+checkpoints/
+runs/
+
+# Python cache
+__pycache__/
+*.pyc
+

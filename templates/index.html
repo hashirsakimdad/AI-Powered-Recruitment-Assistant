@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}AI-Powered Resume Screening & Recruitment Platform{% endblock %}
+{% block content %}
+<!-- 3D Galaxy Animation Background -->
+<div class="landing-hero-wrapper">
+  <canvas id="galaxyAnimation" class="galaxy-canvas"></canvas>
+  <div class="landing-hero">
+    <div class="container">
+    <div class="row align-items-center min-vh-100 py-5">
+      <div class="col-lg-6">
+        <div class="hero-content">
+          <h1 class="display-3 fw-bold mb-4 animate-fade-in">
+            AI-Powered Resume Screening & Recruitment Platform
+          </h1>
+          <p class="lead text-muted mb-4 animate-fade-in-delay">
+            Intelligently detect resumes, analyze candidate qualifications, and provide personalized feedback. 
+            Our advanced AI system uses machine learning to match candidates with job requirements, 
+            saving time and improving hiring decisions.
+          </p>
+          <div class="d-flex gap-3 mb-5 animate-fade-in-delay-2">
+            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg px-4">
+              <i class="bi bi-rocket-takeoff me-2"></i>Get Started
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            </a>
+          </div>
+          <div class="features-preview animate-fade-in-delay-3">
+            <div class="row g-4">
+              <div class="col-md-4">
+                <div class="feature-card">
+                  <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                  </div>
+                  <h6 class="mt-3 mb-2">Smart Detection</h6>
+                  <p class="small text-muted mb-0">AI-powered resume validation ensures only valid CVs are processed</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card">
+                  <div class="feature-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-graph-up-arrow"></i>
+                  </div>
+                  <h6 class="mt-3 mb-2">AI Analysis</h6>
+                  <p class="small text-muted mb-0">Deep semantic analysis matches candidates with job requirements</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="feature-card">
+                  <div class="feature-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-chat-dots"></i>
+                  </div>
+                  <h6 class="mt-3 mb-2">Personalized Feedback</h6>
+                  <p class="small text-muted mb-0">Get tailored suggestions to improve your resume and match score</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-visual">
+          <div class="dashboard-preview shadow-lg rounded-4 p-4 bg-white animate-slide-in">
+            <div class="preview-header mb-4">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Resume Analysis</h5>
+                <span class="badge bg-success">95% Match</span>
+              </div>
+            </div>
+            <div class="preview-content">
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="small text-muted">Semantic Similarity</span>
+                  <span class="small fw-bold">87%</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-primary" style="width: 87%"></div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="small text-muted">Skill Alignment</span>
+                  <span class="small fw-bold">92%</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" style="width: 92%"></div>
+                </div>
+              </div>
+              <div class="skill-tags mt-3">
+                <span class="badge bg-primary-subtle text-primary me-1">Python</span>
+                <span class="badge bg-primary-subtle text-primary me-1">React</span>
+                <span class="badge bg-primary-subtle text-primary me-1">AWS</span>
+                <span class="badge bg-success-subtle text-success">Matched</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<section class="how-it-works py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold mb-3">How It Works</h2>
+      <p class="text-muted">Simple, intelligent, and efficient recruitment process</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="step-card text-center p-4 bg-white rounded-4 shadow-sm h-100">
+          <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <span class="fw-bold fs-4">1</span>
+          </div>
+          <h5 class="mb-3">Upload Resume</h5>
+          <p class="text-muted mb-0">Drag and drop your resume (PDF format). Our AI instantly validates if it's a proper CV.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card text-center p-4 bg-white rounded-4 shadow-sm h-100">
+          <div class="step-number bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <span class="fw-bold fs-4">2</span>
+          </div>
+          <h5 class="mb-3">AI Analysis</h5>
+          <p class="text-muted mb-0">Advanced ML models analyze skills, experience, education, and match against job requirements.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card text-center p-4 bg-white rounded-4 shadow-sm h-100">
+          <div class="step-number bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <span class="fw-bold fs-4">3</span>
+          </div>
+          <h5 class="mb-3">Get Feedback</h5>
+          <p class="text-muted mb-0">Receive personalized, actionable feedback to improve your resume and increase match score.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
