@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# ML / AI files
+*.h5
+*.pt
+*.pth
+*.onnx
+datasets/
+data/
+
+# IDE / Editors
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+.DS_Store
