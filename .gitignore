@@ -33,3 +33,10 @@ data/
 # OS files
 Thumbs.db
 .DS_Store
+
+migrations/
+USER_GUIDE.md
+instance/
+__pycache__/
+*.pyc
+.env
