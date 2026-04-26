@@ -450,14 +450,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ============================================
 // Animated Star Field Background
-// NOTE: Replaced by GalaxyAnimation class in galaxy-animation.js
-// Keeping this function for backward compatibility but it will be overridden
 // ============================================
 
 function createStarField() {
-  // This function is now replaced by GalaxyAnimation class
-  // The galaxy-animation.js script handles initialization automatically
-  // This function is kept for backward compatibility only
   return;
 }
 
@@ -541,4 +536,4 @@ window.renderBarChart = renderBarChart;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
 window.setup3DCardTilt = setup3DCardTilt;
-window.createStarField = createStarField; // Kept for compatibility, but GalaxyAnimation is used instead
+window.createStarField = createStarField;

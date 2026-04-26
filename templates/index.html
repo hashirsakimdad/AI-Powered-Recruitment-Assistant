@@ -1,142 +1,299 @@
 {% extends "base.html" %}
 {% block title %}AI-Powered Resume Screening & Recruitment Platform{% endblock %}
 {% block content %}
-<!-- 3D Galaxy Animation Background -->
-<div class="landing-hero-wrapper">
-  <canvas id="galaxyAnimation" class="galaxy-canvas"></canvas>
-  <div class="landing-hero">
-    <div class="container">
-    <div class="row align-items-center min-vh-100 py-5">
-      <div class="col-lg-6">
-        <div class="hero-content">
-          <h1 class="display-3 fw-bold mb-4 animate-fade-in">
-            AI-Powered Resume Screening & Recruitment Platform
-          </h1>
-          <p class="lead text-secondary mb-4 animate-fade-in-delay">
-            Intelligently detect resumes, analyze candidate qualifications, and provide personalized feedback. 
-            Our advanced AI system uses machine learning to match candidates with job requirements, 
-            saving time and improving hiring decisions.
-          </p>
-          <div class="d-flex gap-3 mb-5 animate-fade-in-delay-2">
-            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg px-4">
-              <i class="bi bi-rocket-takeoff me-2"></i>Get Started
-            </a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4">
-              <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-            </a>
-          </div>
-          <div class="features-preview animate-fade-in-delay-3">
-            <div class="row g-4">
-              <div class="col-md-4">
-                <div class="feature-card">
-                  <div class="feature-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="bi bi-file-earmark-pdf"></i>
-                  </div>
-                  <h6 class="mt-3 mb-2">Smart Detection</h6>
-                  <p class="small text-secondary mb-0">AI-powered resume validation ensures only valid CVs are processed</p>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="feature-card">
-                  <div class="feature-icon bg-success bg-opacity-10 text-success">
-                    <i class="bi bi-graph-up-arrow"></i>
-                  </div>
-                  <h6 class="mt-3 mb-2">AI Analysis</h6>
-                  <p class="small text-secondary mb-0">Deep semantic analysis matches candidates with job requirements</p>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="feature-card">
-                  <div class="feature-icon bg-info bg-opacity-10 text-info">
-                    <i class="bi bi-chat-dots"></i>
-                  </div>
-                  <h6 class="mt-3 mb-2">Personalized Feedback</h6>
-                  <p class="small text-secondary mb-0">Get tailored suggestions to improve your resume and match score</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="hero-visual">
-          <div class="dashboard-preview shadow-lg rounded-4 p-4 animate-slide-in">
-            <div class="preview-header mb-4">
-              <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold">Resume Analysis</h5>
-                <span class="badge badge--success">95% Match</span>
-              </div>
-            </div>
-            <div class="preview-content">
-              <div class="mb-3">
-                <div class="d-flex justify-content-between mb-2">
-                  <span class="small text-secondary">Semantic Similarity</span>
-                  <span class="small fw-bold">87%</span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                  <div class="progress-bar bg-primary" style="width: 87%"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between mb-2">
-                  <span class="small text-secondary">Skill Alignment</span>
-                  <span class="small fw-bold">92%</span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                  <div class="progress-bar bg-success" style="width: 92%"></div>
-                </div>
-              </div>
-              <div class="skill-tags mt-3">
-                <span class="badge bg-primary-subtle text-primary me-1">Python</span>
-                <span class="badge bg-primary-subtle text-primary me-1">React</span>
-                <span class="badge bg-primary-subtle text-primary me-1">AWS</span>
-                <span class="badge bg-success-subtle text-success">Matched</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
-</div>
+<div data-landing>
+  <!-- Fixed morphing blobs behind everything -->
+  <div class="blob blob--1" aria-hidden="true"></div>
+  <div class="blob blob--2" aria-hidden="true"></div>
+  <div class="blob blob--3" aria-hidden="true"></div>
 
-<section class="how-it-works py-5">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold mb-3">How It Works</h2>
-      <p class="text-secondary">Simple, intelligent, and efficient recruitment process</p>
-    </div>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="step-card text-center p-4 rounded-4 shadow-sm h-100 card">
-          <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-            <span class="fw-bold fs-4">1</span>
+  <!-- Optional galaxy canvas (kept) -->
+  <div class="landing-hero-wrapper">
+    <!-- HERO -->
+    <section class="landing-hero-new">
+      <div class="container landing-container">
+        <div class="text-center landing-hero-inner">
+          <div class="hero-badge" data-reveal>
+            ✦ AI-Powered Recruitment
           </div>
-          <h5 class="mb-3">Upload Resume</h5>
-          <p class="text-secondary mb-0">Drag and drop your resume (PDF format). Our AI instantly validates if it's a proper CV.</p>
+
+          <h1 class="hero-title" data-reveal>
+            The Future of Hiring is Here
+          </h1>
+
+          <p class="hero-subtitle" data-reveal>
+            We help you find <span class="morph-word" data-morph="hero">top talent</span>
+          </p>
+
+          <p class="hero-desc" data-reveal>
+            Automate resume screening, rank candidates instantly, and deliver actionable feedback—powered by modern AI that understands skills and context.
+          </p>
+
+          <div class="hero-ctas" data-reveal>
+            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg cta-pulse">
+              Get Started Free →
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+              View Demo
+            </a>
+          </div>
+
+          <div class="hero-preview" data-reveal>
+            <div class="preview-card">
+              <div class="preview-top">
+                <div class="preview-pill">
+                  <span class="dot dot--ok"></span>Live Screening
+                </div>
+                <div class="preview-morph">
+                  <span class="text-secondary small">Mode:</span>
+                  <span class="morph-word morph-word--nav" data-morph="nav">Smarter Hiring</span>
+                </div>
+              </div>
+              <div class="preview-main">
+                <div class="match">
+                  <div class="match__score">85%</div>
+                  <div class="match__label text-secondary">Match Score</div>
+                </div>
+                <div class="bars">
+                  <div class="bar">
+                    <div class="bar__label text-secondary small">Semantic Similarity</div>
+                    <div class="bar__track"><div class="bar__fill" style="width: 86%"></div></div>
+                  </div>
+                  <div class="bar">
+                    <div class="bar__label text-secondary small">Skill Alignment</div>
+                    <div class="bar__track"><div class="bar__fill bar__fill--2" style="width: 79%"></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="preview-tags">
+                <span class="badge bg-primary-subtle text-primary">Python</span>
+                <span class="badge bg-primary-subtle text-primary">SQL</span>
+                <span class="badge bg-primary-subtle text-primary">React</span>
+                <span class="badge badge--success">Shortlisted</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="step-card text-center p-4 rounded-4 shadow-sm h-100 card">
-          <div class="step-number bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-            <span class="fw-bold fs-4">2</span>
-          </div>
-          <h5 class="mb-3">AI Analysis</h5>
-          <p class="text-secondary mb-0">Advanced ML models analyze skills, experience, education, and match against job requirements.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="step-card text-center p-4 rounded-4 shadow-sm h-100 card">
-          <div class="step-number bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
-            <span class="fw-bold fs-4">3</span>
-          </div>
-          <h5 class="mb-3">Get Feedback</h5>
-          <p class="text-secondary mb-0">Receive personalized, actionable feedback to improve your resume and increase match score.</p>
-        </div>
-      </div>
-    </div>
+    </section>
   </div>
-</section>
+
+  <!-- STATS -->
+  <section class="landing-section" id="stats" data-reveal>
+    <div class="container landing-container">
+      <div class="stats-grid" data-reveal-group="stats">
+        <div class="stat-card" data-reveal-item="stats">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-number" data-countup="2,400+">0</div>
+          <div class="stat-label">Resumes Analyzed</div>
+        </div>
+        <div class="stat-card" data-reveal-item="stats">
+          <div class="stat-icon">💼</div>
+          <div class="stat-number" data-countup="380+">0</div>
+          <div class="stat-label">Jobs Posted</div>
+        </div>
+        <div class="stat-card" data-reveal-item="stats">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-number" data-countup="120+">0</div>
+          <div class="stat-label">Companies Using</div>
+        </div>
+        <div class="stat-card" data-reveal-item="stats">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-number" data-countup="< 15sec">0</div>
+          <div class="stat-label">Avg. Analysis Time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="landing-section" id="features" data-reveal>
+    <div class="container landing-container">
+      <div class="section-head">
+        <h2 class="section-title">Everything You Need</h2>
+        <p class="section-subtitle text-secondary">Powerful AI tools for both sides of hiring</p>
+      </div>
+
+      <div class="features-grid" data-reveal-group="features">
+        <div class="feature-new" data-reveal-item="features">
+          <div class="feature-ico">🧠</div>
+          <div class="feature-title">Semantic AI Matching</div>
+          <div class="feature-desc">Goes beyond keywords — understands meaning and context of your resume</div>
+        </div>
+        <div class="feature-new" data-reveal-item="features">
+          <div class="feature-ico">🎯</div>
+          <div class="feature-title">Instant Score & Feedback</div>
+          <div class="feature-desc">Get a 0-100% match score with detailed improvement suggestions in seconds</div>
+        </div>
+        <div class="feature-new" data-reveal-item="features">
+          <div class="feature-ico">📊</div>
+          <div class="feature-title">Candidate Ranking</div>
+          <div class="feature-desc">Auto-sorted leaderboard so recruiters always see the best matches first</div>
+        </div>
+        <div class="feature-new" data-reveal-item="features">
+          <div class="feature-ico">📥</div>
+          <div class="feature-title">One-Click CSV Export</div>
+          <div class="feature-desc">Download full candidate reports instantly for your team</div>
+        </div>
+        <div class="feature-new" data-reveal-item="features">
+          <div class="feature-ico">🔍</div>
+          <div class="feature-title">Resume Validation AI</div>
+          <div class="feature-desc">Custom ML model ensures only real resumes are processed</div>
+        </div>
+        <div class="feature-new" data-reveal-item="features">
+          <div class="feature-ico">📱</div>
+          <div class="feature-title">Works Everywhere</div>
+          <div class="feature-desc">Fully responsive — desktop, tablet and mobile ready</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="landing-section" id="how" data-reveal>
+    <div class="container landing-container">
+      <div class="section-head">
+        <h2 class="section-title">How AI Recruit Works</h2>
+        <p class="section-subtitle text-secondary">A simple flow with powerful results</p>
+      </div>
+
+      <div class="how-wrap">
+        <div class="how-line" aria-hidden="true"></div>
+        <div class="how-grid" data-reveal-group="how">
+          <div class="how-step" data-reveal-item="how">
+            <div class="how-circle">
+              <span class="how-num">1</span>
+              <i class="bi bi-file-earmark-arrow-up"></i>
+            </div>
+            <div class="how-title">Upload Resume</div>
+            <div class="how-desc">Drag & drop your PDF resume to get started instantly</div>
+          </div>
+          <div class="how-step" data-reveal-item="how">
+            <div class="how-circle">
+              <span class="how-num">2</span>
+              <i class="bi bi-cpu"></i>
+            </div>
+            <div class="how-title">AI Analyzes</div>
+            <div class="how-desc">Our ML model reads, scores and compares against job requirements</div>
+          </div>
+          <div class="how-step" data-reveal-item="how">
+            <div class="how-circle">
+              <span class="how-num">3</span>
+              <i class="bi bi-stars"></i>
+            </div>
+            <div class="how-title">Get Results</div>
+            <div class="how-desc">See your match score, missing skills and personalized improvement tips</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="landing-section" id="testimonials" data-reveal>
+    <div class="container landing-container">
+      <div class="section-head">
+        <h2 class="section-title">What People Are Saying</h2>
+        <p class="section-subtitle text-secondary">Trusted by recruiters and candidates</p>
+      </div>
+
+      <div class="testimonials-grid" data-reveal-group="t">
+        <div class="t-card" data-reveal-item="t">
+          <div class="t-quote">“</div>
+          <div class="t-stars">★★★★★</div>
+          <p class="t-text">AI Recruit saved us hours of manual screening. The match scores are incredibly accurate.</p>
+          <div class="t-person">
+            <div class="t-avatar">S</div>
+            <div>
+              <div class="t-name">Sarah K.</div>
+              <div class="t-role">HR Manager</div>
+            </div>
+          </div>
+        </div>
+        <div class="t-card" data-reveal-item="t">
+          <div class="t-quote">“</div>
+          <div class="t-stars">★★★★★</div>
+          <p class="t-text">I finally understand WHY I'm not getting callbacks. The AI feedback was a game changer for my job search.</p>
+          <div class="t-person">
+            <div class="t-avatar t-avatar--2">A</div>
+            <div>
+              <div class="t-name">Ahmed R.</div>
+              <div class="t-role">Software Engineer</div>
+            </div>
+          </div>
+        </div>
+        <div class="t-card" data-reveal-item="t">
+          <div class="t-quote">“</div>
+          <div class="t-stars">★★★★★</div>
+          <p class="t-text">We shortlisted our top 5 candidates in under 10 minutes. Absolutely brilliant tool.</p>
+          <div class="t-person">
+            <div class="t-avatar t-avatar--3">Z</div>
+            <div>
+              <div class="t-name">Zara M.</div>
+              <div class="t-role">Talent Acquisition Lead</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta" data-reveal>
+    <div class="container landing-container">
+      <div class="final-cta-inner">
+        <div>
+          <h2 class="final-title">Ready to Hire Smarter?</h2>
+          <p class="final-sub text-secondary">
+            Join hundreds of companies already using AI Recruit to find their perfect candidates.
+          </p>
+        </div>
+        <div>
+          <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg cta-pulse">
+            Get Started For Free →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="home-footer">
+    <div class="container landing-container">
+      <div class="home-footer-top">
+        <div class="home-foot-brand">
+          <div class="home-foot-logo">AI Recruit</div>
+          <div class="home-foot-tagline">AI-powered hiring for the modern world</div>
+        </div>
+
+        <div class="home-foot-links">
+          <div class="home-foot-title">Platform</div>
+          <div class="home-foot-list">
+            <a href="#stats">Home</a>
+            <a href="#features">Features</a>
+            <a href="#how">How It Works</a>
+            <a href="{{ url_for('login') }}">Sign In</a>
+            <a href="{{ url_for('signup') }}">Sign Up</a>
+          </div>
+        </div>
+
+        <div class="home-foot-project">
+          <div class="home-foot-title">Project</div>
+          <div class="home-foot-list">
+            <div class="home-foot-item">Final Year Project</div>
+            <a href="https://github.com/" target="_blank" rel="noopener">
+              <i class="bi bi-github me-2"></i>Open Source on GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-footer-bar">
+        <div>© 2025 AI Recruit. All rights reserved.</div>
+        <div>⚡ Built by Hashir Sakimdad</div>
+      </div>
+    </div>
+  </footer>
+</div>
 {% endblock %}
 
