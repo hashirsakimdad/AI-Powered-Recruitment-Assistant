@@ -12,6 +12,12 @@ env/
 # Environment variables
 .env
 
+# App runtime / sensitive data
+instance/
+uploads/
+training/
+*.db
+
 # ML / AI files
 *.h5
 *.pt
