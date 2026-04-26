@@ -5,7 +5,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h2 class="fw-bold mb-1">Recruiter Dashboard</h2>
-      <p class="text-muted mb-0">Manage job postings and review candidate applications</p>
+      <p class="text-secondary mb-0">Manage job postings and review candidate applications</p>
     </div>
     <a class="btn btn-primary" href="{{ url_for('create_job') }}">
       <i class="bi bi-plus-circle me-2"></i>Create New Job
@@ -15,8 +15,8 @@
   <div class="row g-4">
     <!-- Job Postings Sidebar -->
     <div class="col-lg-4">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white border-bottom py-3">
+      <div class="card h-100">
+        <div class="card-header border-bottom py-3">
           <h5 class="mb-0 fw-bold">
             <i class="bi bi-briefcase me-2 text-primary"></i>My Job Postings
           </h5>
@@ -25,14 +25,14 @@
           {% if jobs %}
           <div class="job-list">
             {% for job in jobs %}
-            <div class="job-card mb-3 p-3 border rounded-3 hover-lift">
+            <div class="job-card mb-3 p-3 hover-lift">
               <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
                   <h6 class="fw-bold mb-1">{{ job.title }}</h6>
                   <span class="badge bg-primary-subtle text-primary">ID: {{ job.id }}</span>
                 </div>
               </div>
-              <p class="text-muted small mb-2">{% if job.description %}{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}{% else %}No description available{% endif %}</p>
+              <p class="text-secondary small mb-2">{% if job.description %}{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}{% else %}No description available{% endif %}</p>
               <div class="d-flex gap-2 mt-2">
                 <a class="btn btn-outline-primary btn-sm flex-fill" href="{{ url_for('download_report', job_id=job.id) }}">
                   <i class="bi bi-download me-1"></i>Export CSV
@@ -44,7 +44,7 @@
           {% else %}
           <div class="text-center py-5">
             <i class="bi bi-briefcase display-1 text-muted"></i>
-            <p class="text-muted mt-3">No job postings yet.</p>
+            <p class="text-secondary mt-3">No job postings yet.</p>
             <a href="{{ url_for('create_job') }}" class="btn btn-primary btn-sm mt-2">Create Your First Job</a>
           </div>
           {% endif %}
@@ -54,20 +54,20 @@
 
     <!-- Candidate Ranking -->
     <div class="col-lg-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-bottom py-3">
+      <div class="card">
+        <div class="card-header border-bottom py-3">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold">
               <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Candidate Ranking
             </h5>
-            <small class="text-muted">Sorted by AI Match Score</small>
+            <small class="text-secondary">Sorted by AI Match Score</small>
           </div>
         </div>
         <div class="card-body">
           {% if submissions %}
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+              <thead>
                 <tr>
                   <th>Candidate</th>
                   <th>Email</th>
@@ -93,31 +93,31 @@
                       <strong>{{ sub.candidate_name or 'N/A' }}</strong>
                     </div>
                   </td>
-                  <td><small class="text-muted">{{ sub.email or 'N/A' }}</small></td>
+                  <td><small class="text-secondary">{{ sub.email or 'N/A' }}</small></td>
                   <td><span class="badge bg-secondary-subtle text-secondary">{% if sub.job %}{{ sub.job.title }}{% else %}N/A{% endif %}</span></td>
                   <td>
                     <div class="d-flex align-items-center">
                       <div class="score-circle me-2 {% if sub.score and sub.score >= 70 %}score-high{% elif sub.score and sub.score >= 50 %}score-medium{% else %}score-low{% endif %}">
                         {{ sub.score|default(0)|round(1) }}
                       </div>
-                      <small class="text-muted">%</small>
+                      <small class="text-secondary">%</small>
                     </div>
                   </td>
                   <td>
                     {% set status = sub.status or 'pending' %}
                     {% if status == 'selected' %}
-                    <span class="badge bg-success">Selected</span>
+                    <span class="badge badge--success">Selected</span>
                     {% elif status == 'shortlisted' %}
-                    <span class="badge bg-info">Shortlisted</span>
+                    <span class="badge badge--info">Shortlisted</span>
                     {% elif status == 'under_review' %}
-                    <span class="badge bg-warning">Under Review</span>
+                    <span class="badge badge--warning">Under Review</span>
                     {% elif status == 'rejected' %}
-                    <span class="badge bg-danger">Rejected</span>
+                    <span class="badge badge--danger">Rejected</span>
                     {% else %}
-                    <span class="badge bg-secondary">Pending</span>
+                    <span class="badge badge--warning">Pending</span>
                     {% endif %}
                   </td>
-                  <td><small class="text-muted">{% if sub.created_at %}{{ sub.created_at.strftime('%m/%d/%Y') }}{% else %}N/A{% endif %}</small></td>
+                  <td><small class="text-secondary">{% if sub.created_at %}{{ sub.created_at.strftime('%m/%d/%Y') }}{% else %}N/A{% endif %}</small></td>
                   <td>
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#candidateModal{{ sub.id }}">
                       <i class="bi bi-eye"></i> View
@@ -165,7 +165,7 @@
           {% else %}
           <div class="text-center py-5">
             <i class="bi bi-people display-1 text-muted"></i>
-            <p class="text-muted mt-3">No candidate submissions yet.</p>
+            <p class="text-secondary mt-3">No candidate submissions yet.</p>
           </div>
           {% endif %}
         </div>

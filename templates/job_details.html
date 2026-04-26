@@ -12,34 +12,34 @@
       </div>
 
       <!-- Job Details Card -->
-      <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-bottom py-4">
+      <div class="card mb-4">
+        <div class="card-header border-bottom py-4">
           <div class="d-flex justify-content-between align-items-start">
             <div class="flex-grow-1">
               <h2 class="fw-bold mb-2">{{ job.title }}</h2>
               {% if job.company_name %}
-              <p class="text-muted mb-2">
+              <p class="text-secondary mb-2">
                 <i class="bi bi-building me-2"></i>{{ job.company_name }}
                 {% if job.location %}<span class="ms-3"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>{% endif %}
               </p>
               {% endif %}
               <div class="d-flex flex-wrap gap-2 mt-3">
                 {% if job.job_type %}
-                <span class="badge bg-primary-subtle text-primary fs-6 px-3 py-2">
+                <span class="badge bg-primary-subtle text-primary">
                   <i class="bi bi-briefcase me-1"></i>{{ job.job_type }}
                 </span>
                 {% endif %}
                 {% if job.work_mode %}
-                <span class="badge bg-info-subtle text-info fs-6 px-3 py-2">
+                <span class="badge bg-info-subtle text-info">
                   <i class="bi bi-geo-alt me-1"></i>{{ job.work_mode }}
                 </span>
                 {% endif %}
                 {% if job.experience_level %}
-                <span class="badge bg-secondary-subtle text-secondary fs-6 px-3 py-2">
+                <span class="badge bg-secondary-subtle text-secondary">
                   <i class="bi bi-person-badge me-1"></i>{{ job.experience_level }}
                 </span>
                 {% endif %}
-                <span class="badge bg-success-subtle text-success fs-6 px-3 py-2">
+                <span class="badge badge--success">
                   <i class="bi bi-calendar me-1"></i>Posted {{ job.created_at.strftime('%B %d, %Y') }}
                 </span>
               </div>
@@ -64,7 +64,7 @@
             </h4>
             <div class="skill-tags">
               {% for skill in job.required_skills.split(',') %}
-              <span class="badge bg-primary-subtle text-primary fs-6 px-3 py-2 me-2 mb-2">{{ skill.strip() }}</span>
+              <span class="badge bg-primary-subtle text-primary me-2 mb-2">{{ skill.strip() }}</span>
               {% endfor %}
             </div>
           </div>
@@ -78,32 +78,32 @@
             <div class="row g-3">
               {% if job.experience_level %}
               <div class="col-md-6">
-                <div class="info-item p-3 bg-light rounded">
-                  <small class="text-muted d-block mb-1">Experience Level</small>
+                <div class="info-item p-3 rounded card">
+                  <small class="text-secondary d-block mb-1">Experience Level</small>
                   <strong>{{ job.experience_level }}</strong>
                 </div>
               </div>
               {% endif %}
               {% if job.job_type %}
               <div class="col-md-6">
-                <div class="info-item p-3 bg-light rounded">
-                  <small class="text-muted d-block mb-1">Job Type</small>
+                <div class="info-item p-3 rounded card">
+                  <small class="text-secondary d-block mb-1">Job Type</small>
                   <strong>{{ job.job_type }}</strong>
                 </div>
               </div>
               {% endif %}
               {% if job.work_mode %}
               <div class="col-md-6">
-                <div class="info-item p-3 bg-light rounded">
-                  <small class="text-muted d-block mb-1">Work Mode</small>
+                <div class="info-item p-3 rounded card">
+                  <small class="text-secondary d-block mb-1">Work Mode</small>
                   <strong>{{ job.work_mode }}</strong>
                 </div>
               </div>
               {% endif %}
               {% if job.location %}
               <div class="col-md-6">
-                <div class="info-item p-3 bg-light rounded">
-                  <small class="text-muted d-block mb-1">Location</small>
+                <div class="info-item p-3 rounded card">
+                  <small class="text-secondary d-block mb-1">Location</small>
                   <strong>{{ job.location }}</strong>
                 </div>
               </div>

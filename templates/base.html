@@ -1,9 +1,12 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}AI-Powered Resume Screening & Recruitment Platform{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
@@ -11,10 +14,10 @@
   </head>
   <body>
     {% if session.get('user_id') %}
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom">
+    <nav class="navbar navbar-expand-lg app-navbar">
       <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold text-primary" href="{{ url_for('index') }}">
-          <i class="bi bi-robot me-2"></i>AI Recruit
+        <a class="navbar-brand app-brand" href="{{ url_for('index') }}">
+          <i class="bi bi-robot me-2"></i><span class="app-brand__text">AI Recruit</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -23,18 +26,18 @@
           <ul class="navbar-nav ms-auto align-items-center">
             {% if session.get('role') == 'recruiter' %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('recruiter_dashboard') }}">
+              <a class="nav-link {% if request.endpoint == 'recruiter_dashboard' %}active{% endif %}" href="{{ url_for('recruiter_dashboard') }}">
                 <i class="bi bi-speedometer2 me-1"></i>Dashboard
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('create_job') }}">
+              <a class="nav-link {% if request.endpoint == 'create_job' %}active{% endif %}" href="{{ url_for('create_job') }}">
                 <i class="bi bi-plus-circle me-1"></i>Create Job
               </a>
             </li>
             {% else %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('candidate_dashboard') }}">
+              <a class="nav-link {% if request.endpoint == 'candidate_dashboard' %}active{% endif %}" href="{{ url_for('candidate_dashboard') }}">
                 <i class="bi bi-person-workspace me-1"></i>My Dashboard
               </a>
             </li>
@@ -76,9 +79,9 @@
       {% block content %}{% endblock %}
     </main>
     
-    <footer class="footer mt-auto py-4 bg-light border-top">
-      <div class="container text-center text-muted small">
-        <p class="mb-0">&copy; 2024 Zeeshan & Co.</p>
+    <footer class="footer mt-auto py-4">
+      <div class="container text-center">
+        <p class="mb-0 small text-secondary">&copy; 2024 Zeeshan & Co.</p>
       </div>
     </footer>
     

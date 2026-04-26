@@ -7,15 +7,15 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 class="fw-bold mb-1">Create Job Posting</h2>
-          <p class="text-muted mb-0">Add a new job position to start receiving candidate applications</p>
+          <p class="text-secondary mb-0">Add a new job position to start receiving candidate applications</p>
         </div>
         <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline-secondary">
           <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
         </a>
       </div>
       
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-bottom py-3">
+      <div class="card">
+        <div class="card-header border-bottom py-3">
           <h5 class="mb-0 fw-bold">
             <i class="bi bi-file-earmark-plus me-2 text-primary"></i>Job Details
           </h5>
@@ -34,7 +34,7 @@
                 required 
                 autofocus
               />
-              <small class="text-muted">Enter a clear and descriptive job title</small>
+              <small class="text-secondary">Enter a clear and descriptive job title</small>
             </div>
             
             <div class="row">
@@ -109,7 +109,7 @@
                 placeholder="Python, SQL, React, AWS, Docker"
                 required 
               />
-              <small class="text-muted">Separate multiple skills with commas</small>
+              <small class="text-secondary">Separate multiple skills with commas</small>
             </div>
             
             <div class="mb-4">
@@ -123,7 +123,7 @@
                 placeholder="Describe the role, responsibilities, qualifications, and what you're looking for in a candidate..."
                 required
               ></textarea>
-              <small class="text-muted">Provide a detailed description to help AI match candidates accurately</small>
+              <small class="text-secondary">Provide a detailed description to help AI match candidates accurately</small>
             </div>
             
             <div class="d-flex gap-3 pt-3">

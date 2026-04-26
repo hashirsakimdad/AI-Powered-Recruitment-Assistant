@@ -11,7 +11,7 @@
   'use strict';
   
   // Initialize theme from localStorage or system preference
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  const savedTheme = localStorage.getItem('theme') || 'dark';
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const theme = savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
   
@@ -201,9 +201,16 @@ function renderBarChart(canvasId, labels, scores) {
   
   // Get theme
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const textColor = isDark ? '#cbd5e1' : '#64748b';
-  const gridColor = isDark ? '#334155' : '#e2e8f0';
+  const textColor = isDark ? '#94A3B8' : '#64748b';
+  const gridColor = isDark ? '#2A2F42' : '#e2e8f0';
+  const tooltipBg = isDark ? '#1A1F2E' : '#ffffff';
+  const tooltipBorder = isDark ? '#40F2DA' : '#5C58F1';
   
+  const canvas = ctx.getContext('2d');
+  const gradient = canvas.createLinearGradient(0, 0, 0, canvas.canvas.height || 240);
+  gradient.addColorStop(0, '#40F2DA');
+  gradient.addColorStop(1, '#5C58F1');
+
   new Chart(ctx, {
     type: 'bar',
     data: {
@@ -211,11 +218,7 @@ function renderBarChart(canvasId, labels, scores) {
       datasets: [{
         label: 'AI Match Score',
         data: scores,
-        backgroundColor: scores.map(score => {
-          if (score >= 70) return '#10b981';
-          if (score >= 50) return '#f59e0b';
-          return '#ef4444';
-        }),
+        backgroundColor: gradient,
         borderRadius: 8,
         borderSkipped: false,
       }],
@@ -228,10 +231,10 @@ function renderBarChart(canvasId, labels, scores) {
           display: false,
         },
         tooltip: {
-          backgroundColor: isDark ? '#1e293b' : '#ffffff',
-          titleColor: textColor,
-          bodyColor: textColor,
-          borderColor: gridColor,
+          backgroundColor: tooltipBg,
+          titleColor: '#F8FAFC',
+          bodyColor: '#94A3B8',
+          borderColor: tooltipBorder,
           borderWidth: 1,
           padding: 12,
           callbacks: {

@@ -1,107 +1,316 @@
-/* ============================================
-   AI Recruit - Modern ATS Platform Styles
-   Production-Grade Dark Mode Support
-   ============================================ */
+/* =========================================================
+   AI Recruit UI (Design System)
+   - Default DARK MODE
+   - Palette/Typography/Components per spec
+   ========================================================= */
 
 :root {
-  /* Light Theme Colors */
-  --primary-color: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #6366f1;
-  --secondary-color: #64748b;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --info-color: #3b82f6;
-  
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --bg-elevated: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --text-inverse: #ffffff;
-  --border-color: #e2e8f0;
-  --border-light: #f1f5f9;
-  
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --primary: #40F2DA;
+  --secondary: #5C58F1;
+  --tertiary: #032A2B;
+  --neutral: #F7F8FC;
+
+  --bg: #0F1117;
+  --card: #1A1F2E;
+  --border: #2A2F42;
+  --text: #F8FAFC;
+  --text-2: #94A3B8;
+  --placeholder: #64748B;
+
+  --success-bg: #0D2E1F;
+  --success-text: #4ADE80;
+  --success-border: #16A34A;
+
+  --warning-bg: #2D1F00;
+  --warning-text: #FCD34D;
+  --warning-border: #D97706;
+
+  --info-bg: #0D1F3C;
+  --info-text: #60A5FA;
+  --info-border: #2563EB;
+
+  --danger-bg: #2D0F0F;
+  --danger-text: #F87171;
+  --danger-border: #DC2626;
+
+  --badge-bg: #1E2436;
+  --badge-text: #94A3B8;
+  --badge-border: #334155;
+
+  --radius-btn: 8px;
+  --radius-card: 12px;
+  --transition: all 0.2s ease;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.2);
+  --glow-primary: 0 0 12px rgba(64, 242, 218, 0.3);
+
+  --h1: 2.5rem;
+  --h2: 2rem;
+  --h3: 1.5rem;
+  --body: 1rem;
+  --small: 0.875rem;
+  --label: 0.75rem;
 }
 
-/* ============================================
-   Dark Theme - Balanced Color System
-   ============================================ */
-
-[data-theme="dark"] {
-  /* Background Colors - Deep Gray/Charcoal (Not Pure Black) */
-  --bg-primary: #1a1f2e;           /* Main background - deep charcoal */
-  --bg-secondary: #252b3a;         /* Secondary background - lighter charcoal */
-  --bg-tertiary: #2d3443;          /* Tertiary - elevated surfaces */
-  --bg-elevated: #32394a;           /* Cards, modals - lighter surface */
-  --bg-hover: #3a4152;              /* Hover states */
-  
-  /* Text Colors - High Contrast */
-  --text-primary: #f8fafc;         /* Primary text - bright white */
-  --text-secondary: #e2e8f0;        /* Secondary text - light gray */
-  --text-muted: #cbd5e1;            /* Muted text - medium gray */
-  --text-inverse: #1a1f2e;          /* Inverse text for dark backgrounds */
-  
-  /* Border Colors - Visible in Dark Mode */
-  --border-color: #475569;          /* Main borders - visible gray */
-  --border-light: #64748b;          /* Light borders - more visible */
-  --border-hover: #94a3b8;          /* Hover borders - bright */
-  
-  /* Accent Colors - Brighter in Dark Mode */
-  --primary-color: #6366f1;         /* Brighter indigo */
-  --primary-hover: #818cf8;          /* Even brighter on hover */
-  --primary-light: #a5b4fc;          /* Light primary for backgrounds */
-  --success-color: #34d399;          /* Brighter green */
-  --warning-color: #fbbf24;          /* Brighter amber */
-  --danger-color: #f87171;           /* Brighter red */
-  --info-color: #60a5fa;             /* Brighter blue */
-  
-  /* Shadows - Glow-Based for Dark Mode */
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4),
-               0 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5),
-               0 0 0 1px rgba(255, 255, 255, 0.08);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6),
-               0 0 0 1px rgba(255, 255, 255, 0.1);
-  
-  /* Glow Effects for Dark Mode */
-  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
-  --glow-success: 0 0 20px rgba(52, 211, 153, 0.3);
-  --glow-warning: 0 0 20px rgba(251, 191, 36, 0.3);
-  --glow-danger: 0 0 20px rgba(248, 113, 113, 0.3);
+[data-theme="light"] {
+  --bg: var(--neutral);
+  --card: #ffffff;
+  --border: #E6E9F2;
+  --text: #0F172A;
+  --text-2: #475569;
+  --placeholder: #64748B;
 }
 
-/* ============================================
-   Base Styles
-   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-* {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+html, body {
+  height: 100%;
 }
 
 body {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: var(--body);
+  line-height: 1.55;
+}
+
+/* Scrollbar */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: var(--bg); }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Typography */
+h1, .h1 { font-size: var(--h1); font-weight: 700; letter-spacing: -0.02em; }
+h2, .h2 { font-size: var(--h2); font-weight: 700; letter-spacing: -0.015em; }
+h3, .h3 { font-size: var(--h3); font-weight: 700; letter-spacing: -0.01em; }
+p { color: var(--text-2); }
+.small { font-size: var(--small); }
+.label, label, .form-label { font-size: var(--label); font-weight: 500; color: var(--text-2); }
+.text-secondary { color: var(--text-2) !important; }
+.text-primary { color: var(--primary) !important; }
+
+/* Layout spacing */
+.main-content { padding-bottom: 32px; }
+.section { padding: 32px 0; }
+
+/* Navbar */
+.app-navbar {
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background: rgba(15, 17, 23, 0.8);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+[data-theme="light"] .app-navbar {
+  background: rgba(247, 248, 252, 0.8);
+}
+
+.app-brand {
+  font-weight: 700;
+  color: var(--primary) !important;
+  letter-spacing: -0.02em;
+}
+.app-brand__text { color: var(--primary); }
+
+.navbar .nav-link {
+  color: var(--text-2) !important;
+  font-weight: 500;
+  position: relative;
+  transition: var(--transition);
+}
+.navbar .nav-link:hover { color: var(--text) !important; }
+.navbar .nav-link.active {
+  color: var(--primary) !important;
+}
+.navbar .nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.dropdown-menu {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.dropdown-item {
+  color: var(--text);
+}
+.dropdown-item:hover {
+  background: rgba(64, 242, 218, 0.08);
+  color: var(--text);
+}
+
+/* Cards */
+.card,
+.auth-card,
+.dashboard-preview,
+.job-card,
+.submission-card,
+.modal-content {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+}
+.card:hover,
+.job-card:hover,
+.submission-card:hover {
+  border-color: var(--primary) !important;
+}
+
+/* Buttons */
+.btn {
+  border-radius: var(--radius-btn);
+  padding: 10px 24px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #0F1117 !important;
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+  box-shadow: var(--glow-primary);
+}
+
+.btn-secondary {
+  background: var(--secondary) !important;
+  border-color: var(--secondary) !important;
+  color: #fff !important;
+}
+.btn-secondary:hover {
+  filter: brightness(1.1);
+}
+
+.btn-outline-primary {
+  background: transparent !important;
+  border: 1.5px solid var(--primary) !important;
+  color: var(--primary) !important;
+}
+.btn-outline-primary:hover {
+  background: var(--primary) !important;
+  color: #0F1117 !important;
+  box-shadow: var(--glow-primary);
+}
+
+/* Inputs */
+.form-control,
+.form-select,
+.input-group-text {
+  background: #0F1117 !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  transition: var(--transition);
+}
+
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select,
+[data-theme="light"] .input-group-text {
+  background: #ffffff !important;
+}
+
+.form-control::placeholder { color: var(--placeholder) !important; }
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(64,242,218,0.15) !important;
+}
+
+/* Search input helper */
+.search-input-wrap .input-group-text {
+  background: var(--card) !important;
+  border-right: 0 !important;
+}
+.search-input-wrap .form-control {
+  background: var(--card) !important;
+  border-left: 0 !important;
+}
+
+/* Tables */
+.table {
+  color: var(--text);
+}
+.table thead th {
+  background: var(--card) !important;
+  color: var(--text-2) !important;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 16px !important;
+}
+.table td {
+  border-bottom: 1px solid var(--border) !important;
+  padding: 16px !important;
+}
+.table tbody tr:hover {
+  background: var(--card) !important;
+}
+
+/* Badges */
+.badge {
+  border-radius: 999px !important;
+  padding: 4px 12px !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  border: 1px solid var(--badge-border) !important;
+  background: var(--badge-bg) !important;
+  color: var(--badge-text) !important;
+}
+.badge--success { background: var(--success-bg) !important; color: var(--success-text) !important; border-color: var(--success-border) !important; }
+.badge--warning { background: var(--warning-bg) !important; color: var(--warning-text) !important; border-color: var(--warning-border) !important; }
+.badge--info { background: var(--info-bg) !important; color: var(--info-text) !important; border-color: var(--info-border) !important; }
+.badge--danger { background: var(--danger-bg) !important; color: var(--danger-text) !important; border-color: var(--danger-border) !important; }
+
+/* Modals */
+.modal-header,
+.modal-footer {
+  border-color: var(--border) !important;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--border);
+  background: transparent;
+}
+
+/* Landing/Auth keep existing canvas layout but align colors */
+.landing-main {
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(64,242,218,0.14), transparent 60%),
+              radial-gradient(900px 700px at 90% 30%, rgba(92,88,241,0.18), transparent 55%),
+              var(--bg);
   min-height: 100vh;
+}
+
+.auth-container {
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(64,242,218,0.14), transparent 60%),
+              radial-gradient(900px 700px at 90% 30%, rgba(92,88,241,0.18), transparent 55%),
+              var(--bg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar .nav-link.active::after { left: 8px; right: 8px; }
+  .btn { width: 100%; }
 }
 
 .landing-main {
