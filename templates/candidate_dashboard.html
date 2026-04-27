@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Candidate Dashboard - AI Recruit{% endblock %}
 {% block content %}
-<div class="container-fluid px-4 py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid px-4 py-4 candidate-dashboard">
+  <div class="d-flex justify-content-between align-items-center mb-4 page-header dashboard-hero hero-section">
     <div>
       <h2 class="fw-bold mb-1">Candidate Dashboard</h2>
       <p class="text-secondary mb-0">Discover jobs and get instant AI-powered feedback</p>
@@ -10,12 +10,12 @@
   </div>
 
   <!-- Job Search and Filters -->
-  <div class="card mb-4">
+  <div class="card mb-4 search-card search-section">
     <div class="card-body p-4">
       <form method="GET" action="{{ url_for('search_jobs') }}" id="searchForm">
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">
+            <label class="form-label fw-semibold search-label">
               <i class="bi bi-search me-1 text-primary"></i>Search Jobs
             </label>
             <div class="input-group search-input-wrap">
@@ -70,7 +70,7 @@
   <div class="row g-4">
     <!-- Open Jobs Section -->
     <div class="col-lg-7">
-      <div class="card h-100">
+      <div class="card h-100 jobs-card available-jobs">
         <div class="card-header border-bottom py-3">
           <h5 class="mb-0 fw-bold">
             <i class="bi bi-briefcase me-2 text-primary"></i>Available Jobs
@@ -108,7 +108,7 @@
                   </div>
                   <p class="text-secondary small mb-3">{{ job.description[:200] }}{% if job.description|length > 200 %}...{% endif %}</p>
                   <div class="mb-3">
-                    <small class="text-secondary fw-semibold d-block mb-2">Required Skills:</small>
+                    <small class="text-secondary fw-semibold d-block mb-2 required-skills">Required Skills:</small>
                     <div class="skill-tags">
                       {% for skill in job.required_skills.split(',')[:6] %}
                       <span class="badge bg-secondary-subtle text-secondary me-1 mb-1">{{ skill.strip() }}</span>
@@ -192,7 +192,7 @@
 
     <!-- My Submissions Section -->
     <div class="col-lg-5">
-      <div class="card">
+      <div class="card applications-card">
         <div class="card-header border-bottom py-3">
           <h5 class="mb-0 fw-bold">
             <i class="bi bi-file-earmark-text me-2 text-primary"></i>My Applications

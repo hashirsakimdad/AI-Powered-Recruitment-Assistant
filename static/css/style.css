@@ -110,7 +110,7 @@ body.light-mode {
   --text-secondary: #475569;
   --text-muted: #94A3B8;
 
-  background-color: #F8FAFC !important;
+  background-color: #F1F5F9 !important;
   color: #0F172A !important;
 }
 
@@ -121,6 +121,7 @@ body.light-mode nav,
 body.light-mode .navbar {
   background-color: #FFFFFF !important;
   border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
 }
 
 [data-theme="light"] .nav-link,
@@ -130,6 +131,11 @@ body.light-mode .nav-link {
 
 [data-theme="light"] .nav-link:hover,
 body.light-mode .nav-link:hover {
+  color: #0F172A !important;
+}
+
+[data-theme="light"] .navbar .nav-link.active,
+body.light-mode .navbar .nav-link.active {
   color: #0F172A !important;
 }
 
@@ -269,6 +275,119 @@ body.light-mode .modal-header h5 {
 [data-theme="light"] .badge,
 body.light-mode .badge {
   opacity: 1 !important;
+}
+
+/* =========================================================
+   DASHBOARD PAGES - Light mode fixes (Candidate/Recruiter/Create/Details)
+   ========================================================= */
+
+/* Page background */
+[data-theme="light"] body,
+body.light-mode {
+  background-color: #F1F5F9 !important;
+}
+
+/* Hero/Header section */
+[data-theme="light"] .dashboard-hero,
+[data-theme="light"] .page-header,
+[data-theme="light"] .hero-section,
+body.light-mode .dashboard-hero,
+body.light-mode .page-header {
+  background-color: #F1F5F9 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+[data-theme="light"] .dashboard-hero h1,
+[data-theme="light"] .dashboard-hero h2,
+[data-theme="light"] .page-header h1,
+[data-theme="light"] .page-header h2,
+body.light-mode .dashboard-hero h1,
+body.light-mode .page-header h1,
+body.light-mode .dashboard-hero h2,
+body.light-mode .page-header h2 {
+  color: #0F172A !important;
+}
+
+[data-theme="light"] .dashboard-hero p,
+[data-theme="light"] .page-header p,
+body.light-mode .dashboard-hero p,
+body.light-mode .page-header p {
+  color: #475569 !important;
+}
+
+/* Search bar card */
+[data-theme="light"] .search-card,
+[data-theme="light"] .search-section,
+body.light-mode .search-card,
+body.light-mode .search-section {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+[data-theme="light"] .search-label,
+body.light-mode .search-label {
+  color: #475569 !important;
+}
+
+/* Available Jobs card + job cards */
+[data-theme="light"] .jobs-card,
+[data-theme="light"] .available-jobs,
+body.light-mode .jobs-card,
+body.light-mode .available-jobs {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+[data-theme="light"] .job-card,
+body.light-mode .job-card {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+[data-theme="light"] .job-card:hover,
+body.light-mode .job-card:hover {
+  border-color: #40F2DA !important;
+  box-shadow: 0 4px 12px rgba(64,242,218,0.1) !important;
+}
+
+[data-theme="light"] .job-title,
+[data-theme="light"] .job-card h5,
+[data-theme="light"] .job-card h4,
+body.light-mode .job-title,
+body.light-mode .job-card h5,
+body.light-mode .job-card h4 {
+  color: #0F172A !important;
+}
+
+[data-theme="light"] .job-card p,
+body.light-mode .job-card p {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .required-skills,
+body.light-mode .required-skills {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+/* My Applications card */
+[data-theme="light"] .applications-card,
+body.light-mode .applications-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+[data-theme="light"] .applications-card h5,
+body.light-mode .applications-card h5 {
+  color: #0F172A !important;
+}
+
+/* Skill badges (scope to skill tags so we don't break status badges) */
+[data-theme="light"] .skill-tags .badge,
+body.light-mode .skill-tags .badge {
+  background: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #1E293B !important;
 }
 
 /* EMPTY STATE - Light Mode */
@@ -845,6 +964,84 @@ p { color: var(--text-2); }
 }
 .table tbody tr:hover {
   background: var(--card) !important;
+}
+
+/* Recruiter Dashboard - Candidate Ranking table fixes */
+.recruiter-dashboard .table tbody tr {
+  background-color: transparent !important;
+}
+
+.recruiter-dashboard .table tbody tr:hover {
+  background-color: rgba(255,255,255,0.03) !important;
+}
+
+.recruiter-dashboard .table-striped tbody tr:nth-of-type(odd),
+.recruiter-dashboard .table-striped tbody tr:nth-of-type(even) {
+  background-color: transparent !important;
+}
+
+.recruiter-dashboard .table tbody td {
+  color: #F8FAFC !important;
+  font-size: 0.9rem !important;
+}
+
+.recruiter-dashboard .table tbody td:first-child {
+  color: #F8FAFC !important;
+  font-weight: 500 !important;
+}
+
+.recruiter-dashboard .table tbody td:nth-child(2),
+.recruiter-dashboard .table tbody td:nth-child(2) small {
+  color: #94A3B8 !important;
+}
+
+/* Job Position badge visibility inside table */
+.recruiter-dashboard .table .badge {
+  color: #F8FAFC !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+}
+
+/* Match score + Submitted visibility (avoid overriding Email col) */
+.recruiter-dashboard .table tbody td:nth-child(4),
+.recruiter-dashboard .table tbody td:nth-child(6) {
+  color: #F8FAFC !important;
+}
+
+.recruiter-dashboard .table tbody td:nth-child(4) small,
+.recruiter-dashboard .table tbody td:nth-child(6) small {
+  color: #F8FAFC !important;
+}
+
+/* Ensure percent sign isn't muted */
+.recruiter-dashboard .table tbody td:nth-child(4) .text-secondary {
+  color: #F8FAFC !important;
+}
+
+/* View button */
+.recruiter-dashboard .btn-outline-primary,
+.recruiter-dashboard .btn[class*="view"] {
+  border-color: #40F2DA !important;
+  color: #40F2DA !important;
+  background: transparent !important;
+}
+
+.recruiter-dashboard .btn-outline-primary:hover {
+  background: #40F2DA !important;
+  color: #0F1117 !important;
+}
+
+/* Hard override any later table hover/row rules */
+.recruiter-dashboard .table.table-hover tbody tr:hover,
+.recruiter-dashboard .table tbody tr.candidate-row:hover {
+  background-color: rgba(255,255,255,0.03) !important;
+}
+
+.recruiter-dashboard .table tbody tr,
+.recruiter-dashboard .table-striped tbody tr:nth-of-type(odd),
+.recruiter-dashboard .table-striped tbody tr:nth-of-type(even) {
+  background-color: transparent !important;
 }
 
 /* Badges */

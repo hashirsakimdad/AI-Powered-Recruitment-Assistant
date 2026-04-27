@@ -23,7 +23,10 @@ from services.resume_service import handle_upload, process_resume
 
 def create_app():
     ensure_instance_dirs()
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        instance_path=os.path.join(os.path.abspath(os.path.dirname(__file__)), "instance"),
+    )
     app.config.from_object(Config)
     db.init_app(app)
     Migrate(app, db)
@@ -34,6 +37,8 @@ def create_app():
 
     register_routes(app)
     with app.app_context():
+        os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, "instance", "uploads"), exist_ok=True)
         db.create_all()
         seed_demo_users(db.session)
     return app
