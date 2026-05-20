@@ -1,60 +1,190 @@
-{% extends "base.html" %}
-{% block title %}Sign In - AI Recruit{% endblock %}
-{% block content %}
-<div class="auth-shell">
-  <div class="auth-card-clean">
-    <div class="auth-head-clean">
-      <h1 class="auth-title-clean">Welcome Back</h1>
-      <p class="auth-subtitle-clean">Sign in to your account</p>
-      <div class="auth-divider"></div>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - AI Recruit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .lo-orb { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; display:block; }
+    .lo-orb-1 { width:320px;height:320px; background:rgba(124,58,237,0.25); top:-80px;left:-60px; animation:orbFloat 9s ease-in-out infinite alternate; }
+    .lo-orb-2 { width:240px;height:240px; background:rgba(6,182,212,0.18); bottom:-60px;right:60px; animation:orbFloat 12s ease-in-out infinite alternate-reverse; }
+    .lo-orb-3 { width:180px;height:180px; background:rgba(124,58,237,0.12); top:50%;left:50%; animation:orbFloat 7s ease-in-out infinite alternate; }
+    @keyframes orbFloat { from{transform:translate(0,0)} to{transform:translate(20px,15px)} }
+    @keyframes slideInRight { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .login-shell { display:flex; min-height:100vh; }
+    .login-left { flex:0 0 58%; position:relative; overflow:hidden;
+      background:linear-gradient(135deg, #0A0F2C 0%, #1E1B4B 100%);
+      display:flex; align-items:center; justify-content:center; padding:3rem; }
+    .login-right { flex:1; background:#0F1535; display:flex; align-items:center; justify-content:center; padding:3rem 2.5rem; }
+    .login-panel-inner { width:100%; max-width:400px; animation:slideInRight 0.6s ease forwards; }
+    .role-tab.active { background:rgba(124,58,237,0.25) !important; color:#A78BFA !important; }
+    @media (max-width: 900px) {
+      .login-shell { flex-direction:column; }
+      .login-left { flex:0 0 auto; min-height:40vh; padding:2rem; }
+      .login-right { padding:2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body class="page-enter">
 
-    <form method="POST" class="auth-form-clean" id="loginForm" novalidate>
-      <div class="auth-field">
-        <label class="auth-label" for="loginEmail">Email Address</label>
-        <div class="auth-input-wrap">
-          <i class="bi bi-envelope auth-input-ico" aria-hidden="true"></i>
-          <input
-            id="loginEmail"
-            name="email"
-            type="email"
-            class="auth-input"
-            placeholder="your@email.com"
-            required
-            autofocus
-            autocomplete="email"
-          />
-        </div>
-      </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <span data-flash-message="{{ message }}" data-flash-category="{{ category }}" style="display:none;"></span>
+    {% endfor %}
+  {% endwith %}
 
-      <div class="auth-field">
-        <label class="auth-label" for="loginPassword">Password</label>
-        <div class="auth-input-wrap">
-          <i class="bi bi-lock auth-input-ico" aria-hidden="true"></i>
-          <input
-            id="loginPassword"
-            name="password"
-            type="password"
-            class="auth-input"
-            placeholder="Enter your password"
-            required
-            autocomplete="current-password"
-          />
-        </div>
-      </div>
+  <main class="login-shell">
+    <aside class="login-left">
+      <span class="lo-orb lo-orb-1" aria-hidden="true"></span>
+      <span class="lo-orb lo-orb-2" aria-hidden="true"></span>
+      <span class="lo-orb lo-orb-3" aria-hidden="true"></span>
 
-      <button class="auth-submit" type="submit">
-        Sign In
-      </button>
-    </form>
+      <section style="position:relative; z-index:2; text-align:center; max-width:460px;">
+        <svg width="220" height="180" viewBox="0 0 220 180" style="margin-bottom:2rem;" aria-hidden="true">
+          <rect x="30" y="40" width="160" height="100" rx="10" fill="none" stroke="#7C3AED" stroke-width="2"/>
+          <rect x="95" y="140" width="30" height="15" rx="3" fill="#7C3AED" opacity="0.5"/>
+          <rect x="75" y="153" width="70" height="4" rx="2" fill="#7C3AED" opacity="0.4"/>
+          <g id="doc-anim">
+            <rect x="88" y="65" width="44" height="56" rx="5" fill="#06B6D4" opacity="0.15" stroke="#06B6D4" stroke-width="1.5"/>
+            <line x1="97" y1="80" x2="123" y2="80" stroke="#06B6D4" stroke-width="1.5" opacity="0.7"/>
+            <line x1="97" y1="90" x2="123" y2="90" stroke="#06B6D4" stroke-width="1.5" opacity="0.5"/>
+            <line x1="97" y1="100" x2="115" y2="100" stroke="#06B6D4" stroke-width="1.5" opacity="0.3"/>
+            <path d="M110 60 L110 44 M103 50 L110 44 L117 50" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="translate" values="0,0; 0,-8; 0,0" dur="2s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          <circle cx="160" cy="50" r="16" fill="#10B981" opacity="0.15" stroke="#10B981" stroke-width="1.5">
+            <animate attributeName="r" values="14;17;14" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+          <path d="M153 50 L158 56 L167 44" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
 
-    <div class="auth-bottom">
-      <div class="auth-bottom-text">
-        Don't have an account?
-        <a class="auth-link" href="{{ url_for('signup') }}">Sign up</a>
-      </div>
-      <div class="auth-builtby">⚡ Built by Hashir Sakimdad</div>
-    </div>
-  </div>
-</div>
-{% endblock %}
+        <h2 style="font-size:2rem; font-weight:800; color:#F8FAFC; margin-bottom:1rem; line-height:1.2;">
+          Your Next Great Hire<br>is One Click Away
+        </h2>
+        <p style="color:#94A3B8; font-size:1rem; line-height:1.6;">
+          AI-powered resume screening. No bias. Just talent.
+        </p>
+
+        <p style="display:flex; gap:1rem; justify-content:center; margin-top:2rem; flex-wrap:wrap;">
+          <span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34D399; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ 95% Accuracy</span>
+          <span style="background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); color:#22D3EE; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ Instant Scoring</span>
+          <span style="background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.3); color:#A78BFA; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ Zero Bias</span>
+        </p>
+      </section>
+    </aside>
+
+    <section class="login-right">
+      <section class="login-panel-inner">
+        <header style="text-align:center; margin-bottom:2rem;">
+          <span style="font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,#A78BFA,#22D3EE); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">✦ AI Recruit</span>
+        </header>
+
+        <nav class="role-tabs" style="display:flex; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius); padding:4px; margin-bottom:1.75rem;" aria-label="Account type">
+          <button type="button" class="role-tab active" data-role="recruiter" onclick="switchRole('recruiter')"
+            style="flex:1; padding:0.55rem; border:none; background:transparent; color:#94A3B8; border-radius:8px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">🏢 Recruiter</button>
+          <button type="button" class="role-tab" data-role="candidate" onclick="switchRole('candidate')"
+            style="flex:1; padding:0.55rem; border:none; background:transparent; color:#94A3B8; border-radius:8px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">👤 Candidate</button>
+        </nav>
+
+        <form method="POST" action="/login" id="loginForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+          <p class="float-label-wrap" style="position:relative; margin-bottom:1.25rem;">
+            <input type="email" name="email" id="email" required placeholder=" " class="fl-input"
+              style="width:100%; padding:1rem 1rem 0.4rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); color:#F8FAFC; font-size:0.95rem; outline:none; transition:all 0.2s; box-sizing:border-box;" autocomplete="email">
+            <label for="email" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#94A3B8; font-size:0.9rem; transition:all 0.2s; pointer-events:none;">Email address</label>
+          </p>
+
+          <p class="float-label-wrap" style="position:relative; margin-bottom:1.5rem;">
+            <input type="password" name="password" id="password" required placeholder=" " class="fl-input"
+              style="width:100%; padding:1rem 1rem 0.4rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius); color:#F8FAFC; font-size:0.95rem; outline:none; transition:all 0.2s; box-sizing:border-box;" autocomplete="current-password">
+            <label for="password" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#94A3B8; font-size:0.9rem; transition:all 0.2s; pointer-events:none;">Password</label>
+          </p>
+
+          <button type="submit" id="loginBtn" class="btn-primary-custom" style="width:100%; padding:0.85rem; font-size:1rem;" onclick="showLoginSpinner()">
+            <span id="btnText">Sign in</span>
+            <span id="btnSpinner" style="display:none;">
+              <svg width="20" height="20" viewBox="0 0 24 24" style="animation:spin 0.8s linear infinite; vertical-align:middle;">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+                <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </button>
+
+          <p style="text-align:center; margin-top:1.25rem; color:#475569; font-size:0.85rem;">
+            Don't have an account?
+            <a href="/signup" style="color:#A78BFA; text-decoration:none;">Sign up free</a>
+          </p>
+        </form>
+
+        <section style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="text-align:center; color:#475569; font-size:0.78rem; margin-bottom:0.75rem;">TRY A DEMO ACCOUNT</p>
+          <p style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+            <button type="button" onclick="demoLogin('recruiter')" class="btn-outline-custom" style="padding:0.55rem; font-size:0.85rem;">🏢 Demo Recruiter</button>
+            <button type="button" onclick="demoLogin('candidate')" class="btn-outline-custom" style="padding:0.55rem; font-size:0.85rem;">👤 Demo Candidate</button>
+          </p>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('.fl-input').forEach(input => {
+      const label = input.nextElementSibling;
+      function update() {
+        if (input.value || input === document.activeElement) {
+          label.style.top = '0.4rem';
+          label.style.fontSize = '0.7rem';
+          label.style.color = '#7C3AED';
+        } else {
+          label.style.top = '50%';
+          label.style.fontSize = '0.9rem';
+          label.style.color = '#94A3B8';
+        }
+      }
+      input.addEventListener('focus', update);
+      input.addEventListener('blur', update);
+      input.addEventListener('input', update);
+    });
+
+    function switchRole(role) {
+      document.querySelectorAll('.role-tab').forEach(t => {
+        const isActive = t.dataset.role === role;
+        t.classList.toggle('active', isActive);
+        t.style.background = isActive ? 'rgba(124,58,237,0.25)' : 'transparent';
+        t.style.color = isActive ? '#A78BFA' : '#94A3B8';
+      });
+    }
+    switchRole('recruiter');
+
+    const DEMO = {
+      recruiter: { email: 'recruiter@demo.com', password: 'demo123' },
+      candidate: { email: 'candidate@demo.com', password: 'demo123' }
+    };
+    function demoLogin(role) {
+      document.getElementById('email').value = DEMO[role].email;
+      document.getElementById('password').value = DEMO[role].password;
+      document.querySelectorAll('.fl-input').forEach(i => i.dispatchEvent(new Event('input')));
+      switchRole(role);
+    }
+
+    function showLoginSpinner() {
+      setTimeout(() => {
+        document.getElementById('btnText').style.display = 'none';
+        document.getElementById('btnSpinner').style.display = 'inline';
+      }, 100);
+    }
+
+    document.querySelectorAll('.fl-input').forEach(input => {
+      input.addEventListener('focus', () => input.style.borderColor = '#7C3AED');
+      input.addEventListener('blur', () => input.style.borderColor = 'rgba(255,255,255,0.1)');
+    });
+  </script>
+</body>
+</html>

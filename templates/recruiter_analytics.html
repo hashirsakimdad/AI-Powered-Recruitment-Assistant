@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — AI Recruit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    /* Analytics-specific overrides */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .analytics-grid.full { grid-template-columns: 1fr; }
+    .chart-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #7C3AED, #06B6D4);
+      border-radius: 18px 18px 0 0;
+    }
+    .chart-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #F8FAFC;
+      margin: 0 0 1.25rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    /* CRITICAL: constrain canvas so Chart.js respects container */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 260px;
+    }
+    .chart-wrap canvas {
+      max-width: 100% !important;
+      max-height: 260px !important;
+    }
+    /* Doughnut needs square-ish container */
+    .chart-wrap.doughnut {
+      height: 280px;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+      .analytics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div style="display:flex; min-height:100vh;">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">✦ AI Recruit</div>
+    <ul class="sidebar-nav">
+      <li><a href="{{ url_for('recruiter_dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
+      <li><a href="{{ url_for('create_job') }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
+      <li><a href="{{ url_for('recruiter_dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
+      <li><a href="{{ url_for('recruiter_analytics') }}" class="active"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
+    </ul>
+    <a href="{{ url_for('logout') }}" style="display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;text-decoration:none;font-size:.9rem;margin-top:auto;transition:all .3s;">
+      <i class="fa-solid fa-right-from-bracket"></i>Logout
+    </a>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h1 style="font-size:1.6rem;font-weight:700;margin:0;">Analytics</h1>
+        <p style="color:#94A3B8;font-size:.85rem;margin:.25rem 0 0;">
+          {{ submissions|length }} total applications across {{ jobs|length }} jobs
+        </p>
+      </div>
+      <a href="{{ url_for('recruiter_dashboard') }}" style="display:inline-flex;align-items:center;gap:.5rem;
+        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#94A3B8;
+        padding:.55rem 1.1rem;border-radius:10px;text-decoration:none;font-size:.85rem;transition:all .2s;"
+        onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#94A3B8'">
+        ← Back to Dashboard
+      </a>
+    </div>
+
+    <!-- Summary stat cards -->
+    <div class="stats-grid" style="margin-bottom:1.75rem;">
+      <div class="stat-card">
+        <div class="stat-value" data-count="{{ jobs|length }}">0</div>
+        <div class="stat-label">Total Jobs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" data-count="{{ submissions|length }}">0</div>
+        <div class="stat-label">Applications</div>
+      </div>
+      {% set scored = submissions|selectattr('score','ne',None)|list %}
+      <div class="stat-card">
+        <div class="stat-value" data-count="{{ ((scored|map(attribute='score')|sum) / scored|length)|round|int if scored else 0 }}">0</div>
+        <div class="stat-label">Avg Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" data-count="{{ submissions|selectattr('status','eq','shortlisted')|list|length }}">0</div>
+        <div class="stat-label">Shortlisted</div>
+      </div>
+    </div>
+
+    <!-- Row 1: Score Distribution + Applications per Job -->
+    <div class="analytics-grid">
+      <div class="chart-card">
+        <h3><i class="fa-solid fa-chart-bar" style="color:#7C3AED;"></i> Score Distribution</h3>
+        <div class="chart-wrap">
+          <canvas id="scoreDistChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3><i class="fa-solid fa-chart-pie" style="color:#06B6D4;"></i> Applications per Job</h3>
+        <div class="chart-wrap doughnut">
+          <canvas id="appsPerJobChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Skill Gaps (full width) -->
+    <div class="analytics-grid full">
+      <div class="chart-card">
+        <h3><i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B;"></i> Most Common Skill Gaps</h3>
+        <div class="chart-wrap" style="height:{{ [top_gaps|length * 45 + 60, 200]|max }}px;">
+          <canvas id="skillGapChart"></canvas>
+        </div>
+        {% if not top_gaps %}
+        <div style="text-align:center;padding:2rem;color:#94A3B8;font-size:.9rem;">
+          No skill gap data yet. Upload some resumes first.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+// ── Shared Chart.js defaults (dark theme) ──────────────────
+Chart.defaults.color = '#94A3B8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+Chart.defaults.font.size = 12;
+
+// ── 1. Score Distribution Bar Chart ────────────────────────
+(function() {
+  const buckets = {{ score_buckets | tojson }};
+  const ctx = document.getElementById('scoreDistChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['0–20', '21–40', '41–60', '61–80', '81–100'],
+      datasets: [{
+        label: 'Candidates',
+        data: buckets,
+        backgroundColor: [
+          'rgba(239,68,68,0.7)',
+          'rgba(245,158,11,0.7)',
+          'rgba(234,179,8,0.7)',
+          'rgba(6,182,212,0.7)',
+          'rgba(16,185,129,0.7)',
+        ],
+        borderColor: [
+          '#EF4444','#F59E0B','#EAB308','#06B6D4','#10B981'
+        ],
+        borderWidth: 1.5,
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(10,15,44,0.95)',
+          borderColor: 'rgba(124,58,237,0.4)',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ' ' + ctx.parsed.y + ' candidate' + (ctx.parsed.y !== 1 ? 's' : '')
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#94A3B8' }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#94A3B8', stepSize: 1 }
+        }
+      }
+    }
+  });
+})();
+
+// ── 2. Applications per Job Doughnut ───────────────────────
+(function() {
+  const appsData = {{ apps_per_job | tojson }};
+  const labels = Object.keys(appsData);
+  const values = Object.values(appsData);
+  const ctx = document.getElementById('appsPerJobChart').getContext('2d');
+  const palette = [
+    'rgba(124,58,237,0.8)','rgba(6,182,212,0.8)',
+    'rgba(16,185,129,0.8)','rgba(245,158,11,0.8)',
+    'rgba(239,68,68,0.8)','rgba(99,102,241,0.8)',
+    'rgba(236,72,153,0.8)','rgba(20,184,166,0.8)',
+  ];
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: palette.slice(0, labels.length),
+        borderColor: 'rgba(10,15,44,0.8)',
+        borderWidth: 2,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#94A3B8',
+            padding: 12,
+            font: { size: 11 },
+            boxWidth: 12,
+            boxHeight: 12,
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(10,15,44,0.95)',
+          borderColor: 'rgba(124,58,237,0.4)',
+          borderWidth: 1,
+        }
+      }
+    }
+  });
+})();
+
+// ── 3. Skill Gap Horizontal Bar ────────────────────────────
+(function() {
+  const gapsRaw = {{ top_gaps | tojson }};
+  if (!gapsRaw || gapsRaw.length === 0) return;
+  const labels = gapsRaw.map(function(g){ return g[0]; });
+  const values = gapsRaw.map(function(g){ return g[1]; });
+  const ctx = document.getElementById('skillGapChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Candidates missing this skill',
+        data: values,
+        backgroundColor: 'rgba(245,158,11,0.65)',
+        borderColor: '#F59E0B',
+        borderWidth: 1.5,
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(10,15,44,0.95)',
+          borderColor: 'rgba(245,158,11,0.4)',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ' Missing in ' + ctx.parsed.x + ' resume' + (ctx.parsed.x !== 1 ? 's' : '')
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#94A3B8', stepSize: 1 }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#F8FAFC', font: { size: 12 } }
+        }
+      }
+    }
+  });
+})();
+
+// ── Stat counter animation ──────────────────────────────────
+document.querySelectorAll('[data-count]').forEach(function(el) {
+  var target = parseInt(el.dataset.count) || 0;
+  var current = 0;
+  var step = Math.max(1, target / 50);
+  var timer = setInterval(function() {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current);
+    if (current >= target) clearInterval(timer);
+  }, 24);
+});
+</script>
+</body>
+</html>

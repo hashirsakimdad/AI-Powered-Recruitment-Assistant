@@ -1,366 +1,239 @@
 from __future__ import annotations
 
-import math
 import re
-from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Union
 
-import numpy as np
-import joblib
+SKILL_WEIGHTS = {
+    "programming": 1.2,
+    "frameworks": 1.1,
+    "soft_skills": 0.8,
+    "domain": 1.0,
+    "tools": 1.0,
+    "education": 0.9,
+}
 
-try:
-    from sentence_transformers import SentenceTransformer, util
+SKILL_CATEGORIES = {
+    "python": "programming",
+    "javascript": "programming",
+    "java": "programming",
+    "c++": "programming",
+    "react": "frameworks",
+    "django": "frameworks",
+    "flask": "frameworks",
+    "node": "frameworks",
+    "communication": "soft_skills",
+    "leadership": "soft_skills",
+    "teamwork": "soft_skills",
+    "problem solving": "soft_skills",
+    "git": "tools",
+    "docker": "tools",
+    "aws": "tools",
+    "sql": "tools",
+    "linux": "tools",
+    "finance": "domain",
+    "healthcare": "domain",
+    "machine learning": "domain",
+    "data science": "domain",
+}
 
-    _MODEL: Optional[SentenceTransformer] = None
-except Exception:  # pragma: no cover - optional dependency
-    SentenceTransformer = None  # type: ignore
-    util = None  # type: ignore
-    _MODEL = None
 
-# Global variable to cache loaded scoring model
-_SCORING_MODEL: Optional[dict] = None
+def normalize_score(raw: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
+    """Clamp and normalize a raw score to 0-100 range."""
+    clamped = max(min_val, min(max_val, raw))
+    if max_val == min_val:
+        return 0.0
+    return round((clamped - min_val) / (max_val - min_val) * 100, 1)
 
 
-def _load_model() -> Optional[SentenceTransformer]:
-    """Load embedding model, preferring fine-tuned version if available."""
-    global _MODEL
-    if _MODEL is not None:
-        return _MODEL
-    
-    if SentenceTransformer is None:
-        return None
-    
-    # Try to load fine-tuned model first
-    from pathlib import Path
-    fine_tuned_path = Path(__file__).parent.parent / "training" / "models" / "finetuned_embedding"
-    if fine_tuned_path.exists():
-        try:
-            _MODEL = SentenceTransformer(str(fine_tuned_path))
-            return _MODEL
-        except Exception as e:
-            print(f"Warning: Could not load fine-tuned embedding model: {e}")
-    
-    # Fall back to base model
+def compute_keyword_score(resume_text: str, required_skills_str: str) -> float:
+    """
+    Case-insensitive partial match.
+    Max contribution capped at 40 points.
+    """
+    resume_lower = resume_text.lower()
+    skills = [s.strip().lower() for s in required_skills_str.split(",") if s.strip()]
+    if not skills:
+        return 0.0
+
+    total_weight = 0.0
+    matched_weight = 0.0
+
+    for skill in skills:
+        category = SKILL_CATEGORIES.get(skill, "domain")
+        weight = SKILL_WEIGHTS.get(category, 1.0)
+        total_weight += weight
+        if skill in resume_lower:
+            matched_weight += weight
+
+    if total_weight == 0:
+        return 0.0
+
+    raw_ratio = matched_weight / total_weight
+    return min(40.0, raw_ratio * 40.0)
+
+
+def compute_semantic_score(resume_text: str, job_description: str) -> float:
+    """Temperature-scaled cosine similarity. Max 35 points."""
     try:
-        _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-        return _MODEL
+        from sentence_transformers import SentenceTransformer, util
+        import torch
+
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        emb_resume = model.encode(resume_text, convert_to_tensor=True)
+        emb_job = model.encode(job_description, convert_to_tensor=True)
+        raw_sim = float(util.cos_sim(emb_resume, emb_job)[0][0])
+        temperature = 1.5
+        scaled = 1 / (1 + pow(2.718, -(raw_sim / temperature) * 10))
+        return round(scaled * 35, 1)
     except Exception:
-        return None
+        resume_words = set(resume_text.lower().split())
+        job_words = set(job_description.lower().split())
+        if not job_words:
+            return 0.0
+        overlap = len(resume_words & job_words) / len(job_words)
+        return round(min(35.0, overlap * 35.0), 1)
 
 
-def embed_text(text: str) -> np.ndarray:
-    model = _load_model()
-    if model is None:
-        # Lightweight fallback: fixed-size hash-based bag-of-words frequency vector
-        # Use a fixed dimension (384) to match common embedding sizes
-        FIXED_DIM = 384
-        tokens = text.lower().split()
-        vector = np.zeros(FIXED_DIM, dtype=float)
-        for token in tokens:
-            # Use hash to map token to a fixed dimension index
-            idx = hash(token) % FIXED_DIM
-            vector[idx] += 1.0
-        # Normalize to prevent overflow
-        norm = np.linalg.norm(vector)
-        if norm > 0:
-            vector = vector / norm
-        return vector
-    try:
-        return model.encode(text, convert_to_numpy=True)
-    except Exception:
-        # Fallback if encoding fails
-        FIXED_DIM = 384
-        tokens = text.lower().split()
-        vector = np.zeros(FIXED_DIM, dtype=float)
-        for token in tokens:
-            idx = hash(token) % FIXED_DIM
-            vector[idx] += 1.0
-        norm = np.linalg.norm(vector)
-        if norm > 0:
-            vector = vector / norm
-        return vector
-
-
-def _load_scoring_model() -> Optional[dict]:
-    """Load the trained scoring model."""
-    global _SCORING_MODEL
-    if _SCORING_MODEL is not None:
-        return _SCORING_MODEL
-    
-    model_path = Path(__file__).parent.parent / "training" / "models" / "scoring_model.pkl"
-    if model_path.exists():
-        try:
-            _SCORING_MODEL = joblib.load(model_path)
-            return _SCORING_MODEL
-        except Exception as e:
-            print(f"Warning: Could not load trained scoring model: {e}")
-            return None
-    return None
-
-
-def _parse_resume_for_scoring(text: str) -> dict:
-    """Parse resume text to extract features for scoring model."""
-    text_lower = text.lower()
-    
-    # Extract skills
-    skills = re.findall(r"skills?[:\s]+(.*?)(?=\n|experience|education|summary|$)", text, re.IGNORECASE | re.DOTALL)
-    
-    # Extract years of experience
-    years_patterns = [
-        r"(\d+)\s*\+?\s*(?:years?|yrs?)\s*(?:of\s*)?experience",
-        r"experience[:\s]+(?:.*?)(\d+)\s*\+?\s*(?:years?|yrs?)",
-        r"(\d+)\s*\+?\s*(?:years?|yrs?)"
+def compute_experience_score(resume_text: str) -> float:
+    """Award points for years of experience mentions. Max 15 points."""
+    patterns = [
+        r"(\d+)\+?\s*years?\s*of\s*experience",
+        r"(\d+)\+?\s*yrs?\s*experience",
+        r"experience\s*of\s*(\d+)\+?\s*years?",
     ]
-    years_exp = 0.0
-    for pattern in years_patterns:
-        matches = re.findall(pattern, text_lower)
+    years = 0
+    for pattern in patterns:
+        matches = re.findall(pattern, resume_text.lower())
         if matches:
-            try:
-                years_exp = max(years_exp, float(max(matches, key=lambda x: float(x))))
-            except:
-                pass
-    
-    # Extract education level
-    education_keywords = ['phd', 'doctorate', 'masters', 'bachelor', 'degree', 'diploma']
-    education_level = max([i+1 for i, kw in enumerate(education_keywords) if kw in text_lower] or [0])
-    
-    # Extract certifications
-    cert_keywords = ['certified', 'certification', 'certificate', 'license', 'licensed']
-    has_certifications = 1 if any(kw in text_lower for kw in cert_keywords) else 0
-    
-    # Count technical terms
-    tech_terms = ['python', 'java', 'javascript', 'sql', 'react', 'node', 'aws', 'docker', 
-                  'machine learning', 'ai', 'data science', 'algorithm', 'api', 'database']
-    tech_term_count = sum(1 for term in tech_terms if term in text_lower)
-    
+            years = max(years, max(int(m) for m in matches))
+    if years >= 8:
+        return 15.0
+    if years >= 5:
+        return 10.0
+    if years >= 3:
+        return 7.0
+    if years >= 1:
+        return 4.0
+    return 0.0
+
+
+def apply_length_regularization(score: float, resume_text: str) -> float:
+    """Penalize very short resumes (under 100 words)."""
+    word_count = len(resume_text.split())
+    if word_count < 100:
+        return round(score * 0.85, 1)
+    return score
+
+
+def score(resume_text: str, job) -> Dict[str, Union[float, str, List[str]]]:
+    """
+    Returns total score + breakdown out of 100.
+    job must have .description and .required_skills attributes.
+    """
+    required_skills = getattr(job, "required_skills", "") or ""
+    description = getattr(job, "description", "") or ""
+
+    keyword_score = compute_keyword_score(resume_text, required_skills)
+    semantic_score = compute_semantic_score(resume_text, description)
+    experience_score = compute_experience_score(resume_text)
+
+    format_score = 0.0
+    text_lower = resume_text.lower()
+    if any(w in text_lower for w in ["education", "degree", "university"]):
+        format_score += 3
+    if any(w in text_lower for w in ["experience", "worked", "employment"]):
+        format_score += 3
+    if any(w in text_lower for w in ["skill", "proficient", "expertise"]):
+        format_score += 2
+    if "@" in resume_text and any(w in text_lower for w in ["phone", "mobile", "contact"]):
+        format_score += 2
+
+    raw_total = keyword_score + semantic_score + experience_score + format_score
+    total = apply_length_regularization(min(100.0, raw_total), resume_text)
+
+    required = [s.strip().lower() for s in required_skills.split(",") if s.strip()]
+    missing = [s for s in required if s not in resume_text.lower()]
+
     return {
-        'skills': skills,
-        'years_experience': years_exp,
-        'education_level': education_level,
-        'has_certifications': has_certifications,
-        'tech_term_count': tech_term_count
+        "score": total,
+        "keyword_score": keyword_score,
+        "semantic_score": semantic_score,
+        "experience_score": experience_score,
+        "format_score": format_score,
+        "skill_gap": missing,
+        "word_count": len(resume_text.split()),
+        "breakdown_note": (
+            f"keyword:{keyword_score} semantic:{semantic_score} "
+            f"exp:{experience_score} fmt:{format_score}"
+        ),
     }
-
-
-def _extract_features_for_scoring(resume_text: str, job_description: str, required_skills: str) -> Optional[np.ndarray]:
-    """Extract features using the same method as training."""
-    parsed = _parse_resume_for_scoring(resume_text)
-    
-    # Use embedding model for semantic similarity
-    resume_vec = embed_text(resume_text[:2000])
-    job_text = f"{job_description} {required_skills}"
-    job_vec = embed_text(job_text)
-    
-    # Cosine similarity
-    dot_product = np.dot(resume_vec, job_vec)
-    norm_resume = np.linalg.norm(resume_vec)
-    norm_job = np.linalg.norm(job_vec)
-    semantic_sim = dot_product / (norm_resume * norm_job + 1e-8)
-    
-    # Skill matching - include both explicit and inferred skills
-    resume_skills = set()
-    for skill_line in parsed.get('skills', []):
-        for token in skill_line.split(','):
-            token = token.strip().lower()
-            if token and len(token) > 2:
-                resume_skills.add(token)
-    
-    # Add inferred skills if available in parsed data
-    if isinstance(parsed, dict) and 'inferred_skills' in parsed:
-        for skill in parsed.get('inferred_skills', []):
-            skill_lower = skill.strip().lower()
-            if skill_lower and len(skill_lower) > 2:
-                resume_skills.add(skill_lower)
-    
-    job_skills = {s.strip().lower() for s in required_skills.split(',') if s.strip()}
-    skill_overlap = len(resume_skills.intersection(job_skills)) / max(len(job_skills), 1) if job_skills else 0
-    
-    # Experience features
-    years_exp = parsed.get('years_experience', 0)
-    exp_normalized = min(years_exp / 10.0, 1.0)
-    exp_squared = exp_normalized ** 2
-    
-    # Text length features
-    resume_length = len(resume_text)
-    job_length = len(job_description)
-    length_ratio = resume_length / max(job_length, 1)
-    length_log_ratio = np.log1p(resume_length) / max(np.log1p(job_length), 1)
-    
-    # Additional features
-    education_level = parsed.get('education_level', 0) / 5.0
-    has_certifications = parsed.get('has_certifications', 0)
-    tech_term_count = parsed.get('tech_term_count', 0) / 10.0
-    
-    # Skill count features
-    resume_skill_count = len(resume_skills)
-    job_skill_count = len(job_skills)
-    skill_count_ratio = resume_skill_count / max(job_skill_count, 1)
-    
-    # Word overlap
-    resume_words = set(resume_text.lower().split())
-    job_words = set(job_text.lower().split())
-    word_overlap = len(resume_words.intersection(job_words)) / max(len(job_words), 1)
-    
-    return np.array([
-        semantic_sim,
-        skill_overlap,
-        exp_normalized,
-        exp_squared,
-        length_ratio,
-        length_log_ratio,
-        education_level,
-        has_certifications,
-        tech_term_count,
-        resume_skill_count / 20.0,
-        job_skill_count / 10.0,
-        skill_count_ratio,
-        word_overlap,
-        years_exp / 20.0,
-    ])
-
-
-def cosine_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
-    if vec_a.size == 0 or vec_b.size == 0:
-        return 0.0
-    # Ensure vectors have the same shape
-    if vec_a.shape != vec_b.shape:
-        # If shapes don't match, pad or truncate to the smaller size
-        min_size = min(vec_a.size, vec_b.size)
-        vec_a = vec_a.flatten()[:min_size]
-        vec_b = vec_b.flatten()[:min_size]
-    denom = np.linalg.norm(vec_a) * np.linalg.norm(vec_b)
-    if denom == 0:
-        return 0.0
-    return float(np.dot(vec_a, vec_b) / denom)
 
 
 def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str | List[str]]:
-    """
-    Score candidate using trained ML model if available, otherwise use weighted formula.
-    """
+    """Backward-compatible wrapper for existing callers."""
     resume_text = profile.get("raw_text", "")
-    job_description = job.get('description', '')
-    job_title = job.get('title', '')
-    required_skills = job.get('required_skills', '')
-    job_text = f"{job_title}. {job_description}. {required_skills}"
 
-    # Try to use trained scoring model first
-    model_data = _load_scoring_model()
-    if model_data is not None:
-        try:
-            model = model_data.get('model')
-            scaler = model_data.get('scaler')
-            use_scaler = model_data.get('use_scaler', False)
-            
-            if model:
-                # Extract features using same method as training
-                features = _extract_features_for_scoring(resume_text, job_description, required_skills)
-                if features is not None:
-                    # Scale if needed
-                    if use_scaler and scaler:
-                        features = scaler.transform(features.reshape(1, -1))
-                    else:
-                        features = features.reshape(1, -1)
-                    
-                    # Predict score (0-1 range)
-                    predicted_score = float(model.predict(features)[0])
-                    predicted_score = max(0.0, min(1.0, predicted_score))  # Clamp to [0, 1]
-                    
-                    # Extract components for breakdown
-                    semantic_score = float(features[0][0]) if features.shape[1] > 0 else 0.0
-                    skill_overlap = float(features[0][1]) if features.shape[1] > 1 else 0.0
-                    exp_normalized = float(features[0][2]) if features.shape[1] > 2 else 0.0
-                    
-                    final_score = round(predicted_score * 100, 2)
-                    
-                    return {
-                        "score": final_score,
-                        "semantic_score": round(semantic_score * 100, 2),
-                        "skill_alignment": round(skill_overlap * 100, 2),
-                        "experience_bonus": round(exp_normalized * 100, 2),
-                        "rationale": _build_rationale(skill_overlap, exp_normalized, semantic_score),
-                        "method": "ml_model"
-                    }
-        except Exception as e:
-            print(f"Warning: Trained scoring model failed, using fallback: {e}")
-    
-    # Fallback to weighted formula (original method)
-    resume_vec = embed_text(resume_text)
-    job_vec = embed_text(job_text)
-    semantic_score = cosine_similarity(resume_vec, job_vec)
+    class _Job:
+        def __init__(self, data: Dict[str, str]):
+            self.description = data.get("description", "")
+            self.required_skills = data.get("required_skills", "")
 
-    # Use both explicit and inferred skills for matching
-    inferred_skills = profile.get("inferred_skills", [])
-    skill_matches = _match_skills(profile.get("skills", []), required_skills, inferred_skills)
-    experience_bonus = min(profile.get("years_experience", 0), 10) / 10
-
-    weighted_score = 0.55 * semantic_score + 0.30 * skill_matches + 0.15 * experience_bonus
-    final_score = round(weighted_score * 100, 2)
+    result = score(resume_text, _Job(job))
+    keyword = float(result["keyword_score"])
+    semantic = float(result["semantic_score"])
+    experience = float(result["experience_score"])
 
     return {
-        "score": final_score,
-        "semantic_score": round(semantic_score * 100, 2),
-        "skill_alignment": round(skill_matches * 100, 2),
-        "experience_bonus": round(experience_bonus * 100, 2),
-        "rationale": _build_rationale(skill_matches, experience_bonus, semantic_score),
-        "method": "weighted_formula"
+        "score": result["score"],
+        "keyword_score": keyword,
+        "semantic_score": semantic,
+        "experience_score": experience,
+        "format_score": result["format_score"],
+        "skill_gap": result.get("skill_gap", []),
+        "skill_alignment": round(keyword / 40 * 100, 2) if keyword else 0.0,
+        "experience_bonus": round(experience / 15 * 100, 2) if experience else 0.0,
+        "rationale": _build_rationale(keyword, experience, semantic),
+        "method": "weighted_v2",
+        "breakdown_note": result.get("breakdown_note", ""),
     }
 
 
-def _match_skills(resume_skills: List[str], job_skill_text: str, inferred_skills: List[str] = None) -> float:
-    """
-    Match skills including both explicit and inferred skills.
-    
-    Args:
-        resume_skills: Explicitly listed skills
-        job_skill_text: Required skills from job posting
-        inferred_skills: Skills inferred from experience/projects
-    """
-    job_skills = {skill.strip().lower() for skill in job_skill_text.split(",") if skill.strip()}
-    if not job_skills:
-        return 0.5  # neutral when job skills unspecified
-    
-    # Build resume skill set from explicit skills
-    resume_set = set()
-    for line in resume_skills:
-        for token in line.split(","):
-            token = token.strip().lower()
-            if token:
-                resume_set.add(token)
-    
-    # Add inferred skills
-    if inferred_skills:
-        for skill in inferred_skills:
-            skill_lower = skill.strip().lower()
-            if skill_lower:
-                resume_set.add(skill_lower)
-    
-    if not resume_set:
-        return 0.0
-    
-    overlap = job_skills.intersection(resume_set)
-    return len(overlap) / len(job_skills)
+def embed_text(text: str):
+    """Lightweight embedding helper kept for compatibility."""
+    import numpy as np
+
+    fixed_dim = 384
+    tokens = text.lower().split()
+    vector = np.zeros(fixed_dim, dtype=float)
+    for token in tokens:
+        vector[hash(token) % fixed_dim] += 1.0
+    norm = np.linalg.norm(vector)
+    if norm > 0:
+        vector = vector / norm
+    return vector
 
 
-def _build_rationale(skill_matches: float, exp_bonus: float, semantic: float) -> List[str]:
+def _build_rationale(keyword_score: float, experience_score: float, semantic_score: float) -> List[str]:
     reasons = []
-    if semantic >= 0.65:
+    sem_pct = semantic_score / 35 * 100 if semantic_score else 0
+    if sem_pct >= 65:
         reasons.append("Resume content semantically aligns with the job description.")
-    elif semantic >= 0.45:
+    elif sem_pct >= 45:
         reasons.append("Resume shows partial alignment; consider adding role-specific keywords.")
     else:
         reasons.append("Low semantic similarity; highlight relevant projects and responsibilities.")
 
-    if skill_matches >= 0.7:
+    kw_pct = keyword_score / 40 * 100 if keyword_score else 0
+    if kw_pct >= 70:
         reasons.append("Skills closely match requirements.")
-    elif skill_matches >= 0.4:
+    elif kw_pct >= 40:
         reasons.append("Some required skills present; add missing competencies explicitly.")
     else:
         reasons.append("Few required skills detected; update skills section to mirror job needs.")
 
-    if exp_bonus >= 0.5:
+    exp_pct = experience_score / 15 * 100 if experience_score else 0
+    if exp_pct >= 50:
         reasons.append("Experience level meets or exceeds expectations.")
     else:
         reasons.append("Experience appears limited; emphasize impact and measurable outcomes.")
     return reasons
-

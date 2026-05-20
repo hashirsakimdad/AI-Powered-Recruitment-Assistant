@@ -1,143 +1,192 @@
-{% extends "base.html" %}
-{% block title %}Create Job Posting - AI Recruit{% endblock %}
-{% block content %}
-<div class="container-fluid px-4 py-4 create-job-page">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="d-flex justify-content-between align-items-center mb-4 page-header dashboard-hero hero-section">
-        <div>
-          <h2 class="fw-bold mb-1">Create Job Posting</h2>
-          <p class="text-secondary mb-0">Add a new job position to start receiving candidate applications</p>
-        </div>
-        <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
-        </a>
-      </div>
-      
-      <div class="card">
-        <div class="card-header border-bottom py-3">
-          <h5 class="mb-0 fw-bold">
-            <i class="bi bi-file-earmark-plus me-2 text-primary"></i>Job Details
-          </h5>
-        </div>
-        <div class="card-body p-4">
-          <form method="POST" id="jobForm">
-            <div class="mb-4">
-              <label class="form-label fw-semibold">
-                <i class="bi bi-briefcase me-1 text-primary"></i>Job Title
-              </label>
-              <input 
-                type="text" 
-                name="title" 
-                class="form-control form-control-lg" 
-                placeholder="e.g., Senior Software Engineer"
-                required 
-                autofocus
-              />
-              <small class="text-secondary">Enter a clear and descriptive job title</small>
-            </div>
-            
-            <div class="row">
-              <div class="col-md-6 mb-4">
-                <label class="form-label fw-semibold">
-                  <i class="bi bi-building me-1 text-primary"></i>Company Name
-                </label>
-                <input 
-                  type="text" 
-                  name="company_name" 
-                  class="form-control form-control-lg" 
-                  placeholder="Your Company Name"
-                />
-              </div>
-              <div class="col-md-6 mb-4">
-                <label class="form-label fw-semibold">
-                  <i class="bi bi-geo-alt me-1 text-primary"></i>Location
-                </label>
-                <input 
-                  type="text" 
-                  name="location" 
-                  class="form-control form-control-lg" 
-                  placeholder="City, State or Remote"
-                />
-              </div>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ 'Edit Job' if editing else 'Post a Job' }} — AI Recruit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <style>
+    .form-group { margin-bottom: 1.4rem; }
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: #F8FAFC;
+      font-size: 0.92rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: #7C3AED;
+      background: rgba(124,58,237,0.08);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    }
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: #475569; }
+    .form-select option { background: #0F1535; color: #F8FAFC; }
+    .form-textarea { resize: vertical; min-height: 100px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .skills-hint {
+      font-size: 0.78rem;
+      color: #475569;
+      margin-top: 0.35rem;
+    }
+    .submit-row {
+      display: flex;
+      gap: 0.75rem;
+      padding-top: 0.5rem;
+    }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div style="display:flex; min-height:100vh;">
 
-            <div class="row">
-              <div class="col-md-4 mb-4">
-                <label class="form-label fw-semibold">
-                  <i class="bi bi-briefcase me-1 text-primary"></i>Job Type
-                </label>
-                <select name="job_type" class="form-select form-select-lg" required>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Internship">Internship</option>
-                  <option value="Contract">Contract</option>
-                </select>
-              </div>
-              <div class="col-md-4 mb-4">
-                <label class="form-label fw-semibold">
-                  <i class="bi bi-geo-alt me-1 text-primary"></i>Work Mode
-                </label>
-                <select name="work_mode" class="form-select form-select-lg" required>
-                  <option value="Remote">Remote</option>
-                  <option value="Onsite">Onsite</option>
-                  <option value="Hybrid">Hybrid</option>
-                </select>
-              </div>
-              <div class="col-md-4 mb-4">
-                <label class="form-label fw-semibold">
-                  <i class="bi bi-person-badge me-1 text-primary"></i>Experience Level
-                </label>
-                <select name="experience_level" class="form-select form-select-lg">
-                  <option value="">Any Level</option>
-                  <option value="Entry">Entry Level</option>
-                  <option value="Mid">Mid Level</option>
-                  <option value="Senior">Senior Level</option>
-                  <option value="Executive">Executive</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label fw-semibold">
-                <i class="bi bi-tags me-1 text-primary"></i>Required Skills
-              </label>
-              <input 
-                type="text" 
-                name="required_skills" 
-                class="form-control form-control-lg" 
-                placeholder="Python, SQL, React, AWS, Docker"
-                required 
-              />
-              <small class="text-secondary">Separate multiple skills with commas</small>
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label fw-semibold">
-                <i class="bi bi-file-text me-1 text-primary"></i>Job Description
-              </label>
-              <textarea 
-                name="description" 
-                rows="8" 
-                class="form-control" 
-                placeholder="Describe the role, responsibilities, qualifications, and what you're looking for in a candidate..."
-                required
-              ></textarea>
-              <small class="text-secondary">Provide a detailed description to help AI match candidates accurately</small>
-            </div>
-            
-            <div class="d-flex gap-3 pt-3">
-              <button class="btn btn-primary btn-lg px-4" type="submit">
-                <i class="bi bi-check-circle me-2"></i>Create Job Posting
-              </button>
-              <a class="btn btn-outline-secondary btn-lg px-4" href="{{ url_for('recruiter_dashboard') }}">
-                <i class="bi bi-x-circle me-2"></i>Cancel
-              </a>
-            </div>
-          </form>
-        </div>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">✦ AI Recruit</div>
+    <ul class="sidebar-nav">
+      <li><a href="{{ url_for('recruiter_dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
+      <li><a href="{{ url_for('create_job') }}" class="{{ 'active' if not editing else '' }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
+      <li><a href="{{ url_for('recruiter_dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
+      <li><a href="{{ url_for('recruiter_analytics') }}"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
+    </ul>
+    <a href="{{ url_for('logout') }}" style="display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;text-decoration:none;font-size:.9rem;margin-top:auto;transition:all .3s;">
+      <i class="fa-solid fa-right-from-bracket"></i>Logout
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div style="max-width: 760px;">
+
+      <!-- Header -->
+      <div style="margin-bottom: 2rem;">
+        <h1 style="font-size:1.6rem;font-weight:700;margin:0;">
+          {{ '✏️ Edit Job' if editing else '✦ Post a New Job' }}
+        </h1>
+        <p style="color:#94A3B8;font-size:.85rem;margin:.3rem 0 0;">
+          {{ 'Update the job details below.' if editing else 'Fill in the details to start receiving AI-ranked applications.' }}
+        </p>
       </div>
+
+      <!-- Form Card -->
+      <div class="glass-card" style="padding:2rem;">
+        <form method="POST" action="{{ url_for('edit_job', job_id=job.id) if editing else url_for('create_job') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <!-- Title -->
+          <div class="form-group">
+            <label class="form-label">Job Title *</label>
+            <input type="text" name="title" class="form-input"
+              placeholder="e.g. Senior Python Developer"
+              value="{{ job.title if editing else '' }}" required>
+          </div>
+
+          <!-- Company + Location -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Company Name</label>
+              <input type="text" name="company_name" class="form-input"
+                placeholder="e.g. Acme Corp"
+                value="{{ job.company_name if editing else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" name="location" class="form-input"
+                placeholder="e.g. Lahore / Remote"
+                value="{{ job.location if editing else '' }}">
+            </div>
+          </div>
+
+          <!-- Job Type + Work Mode + Experience -->
+          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;">
+            <div class="form-group">
+              <label class="form-label">Job Type</label>
+              <select name="job_type" class="form-select">
+                {% for jt in ['Full-time','Part-time','Contract','Internship','Freelance'] %}
+                  <option value="{{ jt }}" {{ 'selected' if (editing and job.job_type == jt) }}>{{ jt }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Work Mode</label>
+              <select name="work_mode" class="form-select">
+                {% for wm in ['Onsite','Remote','Hybrid'] %}
+                  <option value="{{ wm }}" {{ 'selected' if (editing and job.work_mode == wm) }}>{{ wm }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Experience Level</label>
+              <select name="experience_level" class="form-select">
+                {% for el in ['Entry Level','Mid Level','Senior','Lead','Manager'] %}
+                  <option value="{{ el }}" {{ 'selected' if (editing and job.experience_level == el) }}>{{ el }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Required Skills -->
+          <div class="form-group">
+            <label class="form-label">Required Skills *</label>
+            <input type="text" name="required_skills" class="form-input"
+              placeholder="e.g. Python, Django, REST APIs, PostgreSQL"
+              value="{{ job.required_skills if editing else '' }}" required>
+            <div class="skills-hint">Comma-separated. These are used directly by the AI scorer.</div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label">Job Description *</label>
+            <textarea name="description" class="form-textarea" rows="6"
+              placeholder="Describe responsibilities, requirements, and what makes this role unique..."
+              required>{{ job.description if editing else '' }}</textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="submit-row">
+            <button type="submit" class="btn-primary-custom" style="padding:.75rem 2rem;font-size:.95rem;">
+              {{ '💾 Save Changes' if editing else '🚀 Post Job' }}
+            </button>
+            <a href="{{ url_for('recruiter_dashboard') }}" class="btn-outline-custom" style="padding:.75rem 1.5rem;font-size:.95rem;text-decoration:none;">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+
     </div>
-  </div>
+  </main>
 </div>
-{% endblock %}
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+</body>
+</html>

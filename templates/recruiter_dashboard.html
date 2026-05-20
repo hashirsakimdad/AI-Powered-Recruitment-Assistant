@@ -1,351 +1,366 @@
-{% extends "base.html" %}
-{% block title %}Recruiter Dashboard - AI Recruit{% endblock %}
-{% block content %}
-<div class="container-fluid px-4 py-4 recruiter-dashboard">
-  <div class="d-flex justify-content-between align-items-center mb-4 page-header dashboard-hero hero-section">
-    <div>
-      <h2 class="fw-bold mb-1">Recruiter Dashboard</h2>
-      <p class="text-secondary mb-0">Manage job postings and review candidate applications</p>
-    </div>
-    <a class="btn btn-primary" href="{{ url_for('create_job') }}">
-      <i class="bi bi-plus-circle me-2"></i>Create New Job
-    </a>
-  </div>
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recruiter Dashboard — AI Recruit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="page-enter">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div data-flash-message="{{ message }}" data-flash-category="{{ category }}" style="display:none;" aria-hidden="true"></div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-  <div class="row g-4">
-    <!-- Job Postings Sidebar -->
-    <div class="col-lg-4">
-      <div class="card h-100">
-        <div class="card-header border-bottom py-3">
-          <h5 class="mb-0 fw-bold">
-            <i class="bi bi-briefcase me-2 text-primary"></i>My Job Postings
-          </h5>
+  <button type="button" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Open menu"
+    style="display:none;position:fixed;top:1rem;left:1rem;z-index:200;background:rgba(124,58,237,0.8);border:none;color:#fff;width:40px;height:40px;border-radius:var(--radius);font-size:1.2rem;cursor:pointer;">☰</button>
+  <div id="sidebarOverlay" onclick="toggleSidebar()"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;" aria-hidden="true"></div>
+
+  <div style="display:flex;min-height:100vh;">
+    <nav class="sidebar">
+      <div class="sidebar-logo">✦ AI Recruit</div>
+      <ul class="sidebar-nav">
+        <li><a href="{{ url_for('recruiter_dashboard') }}" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('create_job') }}"><i class="fa-solid fa-briefcase"></i> Post a Job</a></li>
+        <li><a href="#candidates-section"><i class="fa-solid fa-users"></i> Candidates</a></li>
+        <li><a href="{{ url_for('recruiter_analytics') }}"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
+      </ul>
+      <a href="{{ url_for('logout') }}" style="display:flex;align-items:center;gap:0.75rem;color:#EF4444;padding:0.7rem 0.9rem;border-radius:var(--radius);text-decoration:none;font-size:0.9rem;margin-top:auto;transition:var(--transition);">
+        <i class="fa-solid fa-right-from-bracket"></i> Logout
+      </a>
+    </nav>
+
+    <main class="main-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 style="font-size:1.6rem;font-weight:700;margin:0;">Dashboard</h1>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin:0.25rem 0 0;">Welcome back — {{ jobs|length }} active jobs</p>
         </div>
-        <div class="card-body">
-          {% if jobs %}
-          <div class="job-list">
-            {% for job in jobs %}
-            <div class="job-card mb-3 p-3 hover-lift">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <h6 class="fw-bold mb-1">{{ job.title }}</h6>
-                  <span class="badge bg-primary-subtle text-primary">ID: {{ job.id }}</span>
-                </div>
-              </div>
-              <p class="text-secondary small mb-2">{% if job.description %}{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}{% else %}No description available{% endif %}</p>
-              <div class="d-flex gap-2 mt-2">
-                <a class="btn btn-outline-primary btn-sm flex-fill" href="{{ url_for('download_report', job_id=job.id) }}">
-                  <i class="bi bi-download me-1"></i>Export CSV
-                </a>
-              </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <button type="button" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+          <a href="{{ url_for('create_job') }}" class="btn-primary-custom">+ Post Job</a>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" data-count="{{ jobs|length }}">0</div>
+          <div class="stat-label">Active Jobs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count="{{ submissions|length }}">0</div>
+          <div class="stat-label">Total Applications</div>
+        </div>
+        <div class="stat-card">
+          {% set scores = submissions|selectattr('score','ne',None)|map(attribute='score')|list %}
+          <div class="stat-value" data-count="{{ (scores|sum / scores|length)|round|int if scores else 0 }}">0</div>
+          <div class="stat-label">Average Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count="{{ submissions|selectattr('status','eq','shortlisted')|list|length }}">0</div>
+          <div class="stat-label">Shortlisted</div>
+        </div>
+      </div>
+
+      {% if jobs %}
+      <div class="glass-card" style="margin-bottom:1.5rem;padding:1.25rem 1.5rem;">
+        <h2 style="font-size:1.1rem;font-weight:600;margin:0 0 1rem;">My Job Postings</h2>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          {% for job in jobs %}
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;padding:0.75rem;background:rgba(255,255,255,0.03);border-radius:var(--radius);border:1px solid rgba(255,255,255,0.06);">
+            <div>
+              <div style="font-weight:600;">{{ job.title }}</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;">{{ job.submissions|length }} applicant{{ 's' if job.submissions|length != 1 else '' }}</div>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <a href="{{ url_for('download_report', job_id=job.id) }}" class="btn-outline-custom" style="padding:0.4rem 1rem;font-size:0.8rem;">CSV</a>
+              <a href="{{ url_for('download_report_pdf', job_id=job.id) }}" class="btn-primary-custom" style="padding:0.4rem 1rem;font-size:0.8rem;">📄 PDF Report</a>
+              <a href="{{ url_for('edit_job', job_id=job.id) }}" class="btn-outline-custom" style="padding:0.4rem 1rem;font-size:0.8rem;">Edit</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+        <button type="button" onclick="setView('table')" id="tabTable" class="btn-primary-custom" style="padding:0.5rem 1.25rem;font-size:0.85rem;">📋 Table View</button>
+        <button type="button" onclick="setView('kanban')" id="tabKanban" class="btn-outline-custom" style="padding:0.5rem 1.25rem;font-size:0.85rem;">🗂 Kanban View</button>
+      </div>
+
+      <div id="kanbanView" style="display:none;margin-bottom:1.5rem;">
+        <div class="kanban-board">
+          {% for col_status in ['pending','under_review','shortlisted','selected','rejected'] %}
+          <div class="kanban-col" id="col-{{ col_status }}" ondragover="event.preventDefault()" ondrop="onDrop(event, '{{ col_status }}')">
+            <div class="kanban-col-title">{{ col_status|replace('_',' ')|upper }}</div>
+            {% for sub in submissions if (sub.status or 'pending') == col_status %}
+            <div class="kanban-card" draggable="true" id="kcard-{{ sub.id }}" ondragstart="onDragStart(event, {{ sub.id }})">
+              <div style="font-weight:500;font-size:0.88rem;margin-bottom:0.3rem;">{{ sub.candidate_name }}</div>
+              <div style="color:var(--text-muted);font-size:0.78rem;margin-bottom:0.5rem;">{{ sub.job.title }}</div>
+              {% set score = sub.score or 0 %}
+              <span class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}" style="font-size:0.75rem;">{{ score }}/100</span>
             </div>
             {% endfor %}
           </div>
-          {% else %}
-          <div class="text-center py-5">
-            <i class="bi bi-briefcase display-1 text-muted"></i>
-            <p class="text-secondary mt-3">No job postings yet.</p>
-            <a href="{{ url_for('create_job') }}" class="btn btn-primary btn-sm mt-2">Create Your First Job</a>
-          </div>
-          {% endif %}
+          {% endfor %}
         </div>
       </div>
-    </div>
 
-    <!-- Candidate Ranking -->
-    <div class="col-lg-8">
-      <div class="card">
-        <div class="card-header border-bottom py-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">
-              <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Candidate Ranking
-            </h5>
-            <small class="text-secondary">Sorted by AI Match Score</small>
-          </div>
+      <div id="candidates-section" class="glass-card" style="padding:0;">
+        <div style="padding:1.25rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+          <h2 style="font-size:1.1rem;font-weight:600;margin:0;">All Candidates</h2>
+          <input type="text" id="tableSearch" placeholder="Search candidates..." oninput="filterTable(this.value)"
+            style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:0.5rem 1rem;color:var(--text);font-size:0.9rem;width:220px;outline:none;" />
         </div>
-        <div class="card-body">
+        <div style="overflow-x:auto;">
           {% if submissions %}
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Candidate</th>
-                  <th>Email</th>
-                  <th>Job Position</th>
-                  <th>Match Score</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for sub in submissions %}
-                <tr class="candidate-row">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="avatar-circle bg-primary text-white me-2">
-                        {% if sub.candidate_name and sub.candidate_name|length > 0 %}
-                        {{ sub.candidate_name[0].upper() }}
-                        {% else %}
-                        C
-                        {% endif %}
-                      </div>
-                      <strong>{{ sub.candidate_name or 'N/A' }}</strong>
+          <table class="data-table" id="candidatesTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable(0)">Candidate</th>
+                <th onclick="sortTable(1)">Job</th>
+                <th onclick="sortTable(2)">Score</th>
+                <th onclick="sortTable(3)">Status</th>
+                <th onclick="sortTable(4)">Applied</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in submissions %}
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#06B6D4);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:600;flex-shrink:0;">
+                      {{ sub.candidate_name[0]|upper if sub.candidate_name else '?' }}
                     </div>
-                  </td>
-                  <td><small class="text-secondary">{{ sub.email or 'N/A' }}</small></td>
-                  <td><span class="badge bg-secondary-subtle text-secondary">{% if sub.job %}{{ sub.job.title }}{% else %}N/A{% endif %}</span></td>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="score-circle me-2 {% if sub.score and sub.score >= 70 %}score-high{% elif sub.score and sub.score >= 50 %}score-medium{% else %}score-low{% endif %}">
-                        {{ sub.score|default(0)|round(1) }}
-                      </div>
-                      <small class="text-secondary">%</small>
+                    <div>
+                      <div style="font-weight:500;font-size:0.9rem;">{{ sub.candidate_name }}</div>
+                      <div style="color:var(--text-muted);font-size:0.78rem;">{{ sub.email }}</div>
                     </div>
-                  </td>
-                  <td>
-                    {% set status = sub.status or 'pending' %}
-                    {% if status == 'selected' %}
-                    <span class="badge badge--success">Selected</span>
-                    {% elif status == 'shortlisted' %}
-                    <span class="badge badge--info">Shortlisted</span>
-                    {% elif status == 'under_review' %}
-                    <span class="badge badge--warning">Under Review</span>
-                    {% elif status == 'rejected' %}
-                    <span class="badge badge--danger">Rejected</span>
-                    {% else %}
-                    <span class="badge badge--warning">Pending</span>
-                    {% endif %}
-                  </td>
-                  <td><small class="text-secondary">{% if sub.created_at %}{{ sub.created_at.strftime('%m/%d/%Y') }}{% else %}N/A{% endif %}</small></td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#candidateModal{{ sub.id }}">
-                      <i class="bi bi-eye"></i> View
-                    </button>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Chart -->
-          <div class="mt-4">
-            <canvas id="rankingChart" height="80"></canvas>
-          </div>
-          {% if submissions %}
-          <script type="application/json" id="chartData">
-            {
-              "labels": [
-                {% for sub in submissions %}
-                {{ sub.candidate_name|default('Unknown')|tojson }}{% if not loop.last %},{% endif %}
-                {% endfor %}
-              ],
-              "scores": [
-                {% for sub in submissions %}
-                {{ (sub.score|default(0)|round(1)) }}{% if not loop.last %},{% endif %}
-                {% endfor %}
-              ]
-            }
-          </script>
-          {% else %}
-          <script type="application/json" id="chartData">
-            {"labels": [], "scores": []}
-          </script>
-          {% endif %}
-          <script type="text/javascript">
-            var chartDataElement = document.getElementById('chartData');
-            if (chartDataElement) {
-              var chartData = JSON.parse(chartDataElement.textContent);
-              if (typeof renderBarChart === 'function' && chartData.labels.length > 0) {
-                renderBarChart("rankingChart", chartData.labels, chartData.scores);
-              }
-            }
-          </script>
-          {% else %}
-          <div class="text-center py-5">
-            <i class="bi bi-people display-1 text-muted"></i>
-            <p class="text-secondary mt-3">No candidate submissions yet.</p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Candidate Detail Modals - Moved outside table for valid HTML -->
-{% if submissions %}
-{% for sub in submissions %}
-<div class="modal fade" id="candidateModal{{ sub.id }}" tabindex="-1" aria-labelledby="candidateModalLabel{{ sub.id }}" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="candidateModalLabel{{ sub.id }}">Resume Analysis - {{ sub.candidate_name or 'N/A' }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Overall Match Score</h6>
-            <span class="badge {% if sub.score and sub.score >= 70 %}bg-success{% elif sub.score and sub.score >= 50 %}bg-warning{% else %}bg-danger{% endif %} fs-6 px-3 py-2">
-              {{ sub.score|default(0)|round(1) }}%
-            </span>
-          </div>
-          <div class="progress" style="height: 12px;">
-            <div class="progress-bar {% if sub.score and sub.score >= 70 %}bg-success{% elif sub.score and sub.score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
-                 data-width="{{ (sub.score|default(0)|round(1)) }}"></div>
-          </div>
-        </div>
-
-        {% if sub.explanation and sub.explanation is mapping %}
-        {% set feedback_raw = sub.explanation.get('feedback', {}) if sub.explanation else {} %}
-        {% set scores_raw = sub.explanation.get('scores', {}) if sub.explanation else {} %}
-        {% set feedback = feedback_raw if feedback_raw is mapping else {} %}
-        {% set scores = scores_raw if scores_raw is mapping else {} %}
-        
-        <!-- Score Breakdown -->
-        {% if scores and scores is mapping %}
-        <div class="row g-3 mb-4">
-          <div class="col-md-4">
-            <div class="score-card p-3 bg-light rounded">
-              <small class="text-muted d-block mb-1">Semantic Similarity</small>
-              <h4 class="mb-0 text-primary">{{ scores.get('semantic_score', 0) }}%</h4>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="score-card p-3 bg-light rounded">
-              <small class="text-muted d-block mb-1">Skill Alignment</small>
-              <h4 class="mb-0 text-success">{{ scores.get('skill_alignment', 0) }}%</h4>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="score-card p-3 bg-light rounded">
-              <small class="text-muted d-block mb-1">Experience Bonus</small>
-              <h4 class="mb-0 text-info">{{ scores.get('experience_bonus', 0) }}%</h4>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Parsed Resume Data -->
-        {% if sub.parsed_summary and sub.parsed_summary is mapping %}
-        <div class="mb-4">
-          <h6 class="fw-bold mb-3">Resume Details</h6>
-          <div class="row g-3">
-            <!-- Explicit Skills -->
-            {% if sub.explicit_skills and sub.explicit_skills is iterable and sub.explicit_skills|length > 0 %}
-            <div class="col-12">
-              <small class="text-muted fw-semibold d-block mb-2">
-                <i class="bi bi-check-circle me-1 text-success"></i>Explicitly Listed Skills
-              </small>
-              <div class="skill-tags">
-                {% for skill in (sub.explicit_skills[:10] if sub.explicit_skills is iterable else []) %}
-                <span class="badge bg-success-subtle text-success me-1 mb-1">{{ skill }}</span>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-            
-            <!-- Inferred Skills -->
-            {% if sub.inferred_skills and sub.inferred_skills is iterable and sub.inferred_skills|length > 0 %}
-            <div class="col-12">
-              <small class="text-muted fw-semibold d-block mb-2">
-                <i class="bi bi-lightbulb me-1 text-warning"></i>Inferred Skills (from experience/projects)
-              </small>
-              <div class="skill-tags">
-                {% for skill in (sub.inferred_skills[:10] if sub.inferred_skills is iterable else []) %}
-                <span class="badge bg-warning-subtle text-warning me-1 mb-1">{{ skill }}</span>
-                {% endfor %}
-              </div>
-              <small class="text-muted d-block mt-1">
-                <i class="bi bi-info-circle me-1"></i>These skills were inferred from the candidate's work experience and project descriptions.
-              </small>
-            </div>
-            {% endif %}
-            
-            {% if sub.parsed_summary and sub.parsed_summary is mapping and sub.parsed_summary.get('years_experience') %}
-            <div class="col-6">
-              <small class="text-muted fw-semibold d-block mb-1">Experience</small>
-              <strong>{{ sub.parsed_summary.get('years_experience', 0) }} years</strong>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Feedback -->
-        {% if feedback and feedback is mapping %}
-        <div class="mb-3">
-          <h6 class="fw-bold mb-3">AI Feedback</h6>
-          {% if feedback.get('summary') %}
-          <div class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>{{ feedback.get('summary') }}
-          </div>
-          {% endif %}
-          {% if feedback.get('suggestions') and feedback.get('suggestions') is iterable %}
-          <div class="mb-3">
-            <small class="text-muted fw-semibold d-block mb-2">Suggestions</small>
-            <ul class="list-unstyled">
-              {% for suggestion in feedback.get('suggestions', [])[:5] %}
-              <li class="mb-2">
-                <i class="bi bi-arrow-right-circle text-primary me-2"></i>{{ suggestion }}
-              </li>
+                  </div>
+                </td>
+                <td style="color:var(--text-muted);font-size:0.9rem;">{{ sub.job.title }}</td>
+                <td>
+                  {% set score = sub.score or 0 %}
+                  <span class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">{{ score }}/100</span>
+                </td>
+                <td>
+                  <span class="status-badge status-{{ sub.status or 'pending' }}">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
+                </td>
+                <td style="color:var(--text-muted);font-size:0.85rem;">{{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '—' }}</td>
+                <td>
+                  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    <button type="button" onclick="openBreakdown({{ sub.id }})" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);color:#22D3EE;padding:0.3rem 0.75rem;border-radius:8px;font-size:0.8rem;cursor:pointer;">📊 Breakdown</button>
+                    <select onchange="updateStatus({{ sub.id }}, this.value)" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text);padding:0.3rem 0.5rem;border-radius:8px;font-size:0.8rem;cursor:pointer;">
+                      {% for status in ['pending','under_review','shortlisted','selected','rejected'] %}
+                      <option value="{{ status }}" {% if sub.status == status %}selected{% endif %}>{{ status|replace('_',' ')|title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </td>
+              </tr>
               {% endfor %}
-            </ul>
-          </div>
-          {% endif %}
-        </div>
-        {% endif %}
-        {% endif %}
-      </div>
-      <div class="modal-footer">
-        <div class="flex-grow-1">
-          <h6 class="fw-semibold mb-2">Decision Control</h6>
-          <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-info btn-sm candidate-status-btn" 
-                    data-submission-id="{{ sub.id }}" data-status="shortlisted">
-              <i class="bi bi-star me-1"></i>Shortlist
-            </button>
-            <button type="button" class="btn btn-outline-warning btn-sm candidate-status-btn" 
-                    data-submission-id="{{ sub.id }}" data-status="under_review">
-              <i class="bi bi-clock me-1"></i>Under Review
-            </button>
-            <button type="button" class="btn btn-outline-success btn-sm candidate-status-btn" 
-                    data-submission-id="{{ sub.id }}" data-status="selected">
-              <i class="bi bi-check-circle me-1"></i>Select
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm candidate-status-btn" 
-                    data-submission-id="{{ sub.id }}" data-status="rejected">
-              <i class="bi bi-x-circle me-1"></i>Reject
-            </button>
-          </div>
-        </div>
-        <div>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          {% if sub.job %}
-          <a href="{{ url_for('download_report', job_id=sub.job.id) }}" class="btn btn-primary">
-            <i class="bi bi-download me-1"></i>Export Report
-          </a>
+            </tbody>
+          </table>
+          {% else %}
+          <p style="padding:2rem;text-align:center;color:var(--text-muted);">No candidate submissions yet.</p>
           {% endif %}
         </div>
       </div>
+    </main>
+  </div>
+
+  <div id="breakdownModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:500px;padding:2rem;position:relative;">
+      <button type="button" onclick="closeBreakdown()" style="position:absolute;top:1rem;right:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#F87171;width:32px;height:32px;border-radius:50%;cursor:pointer;">✕</button>
+      <h3 style="margin:0 0 0.5rem;font-size:1.1rem;" id="bdCandidateName">Score Breakdown</h3>
+      <div id="bdTotalScore" style="font-size:2.5rem;font-weight:800;margin-bottom:1.5rem;background:linear-gradient(135deg,#A78BFA,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></div>
+      <canvas id="bdChart" height="220"></canvas>
+      <div id="bdSkillGap" style="margin-top:1.25rem;"></div>
     </div>
   </div>
-</div>
-{% endfor %}
-{% endif %}
 
-<script type="text/javascript">
-  // Set progress bar widths from data attributes
-  document.addEventListener('DOMContentLoaded', function() {
-    var progressBars = document.querySelectorAll('.progress-bar[data-width]');
-    progressBars.forEach(function(bar) {
-      var width = bar.getAttribute('data-width');
-      if (width) {
-        bar.style.width = width + '%';
-      }
+  <script>
+    document.querySelectorAll('[data-count]').forEach(el => {
+      const target = parseInt(el.dataset.count, 10) || 0;
+      let current = 0;
+      const step = Math.max(1, target / 50);
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = Math.floor(current);
+        if (current >= target) clearInterval(timer);
+      }, 24);
     });
-  });
-</script>
-{% endblock %}
+
+    function filterTable(query) {
+      const q = query.toLowerCase();
+      document.querySelectorAll('#candidatesTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    let sortDir = {};
+    function sortTable(colIdx) {
+      const table = document.getElementById('candidatesTable');
+      if (!table) return;
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const dir = (sortDir[colIdx] = !sortDir[colIdx]);
+      table.querySelectorAll('th').forEach((th, i) => {
+        th.className = i === colIdx ? (dir ? 'sort-asc' : 'sort-desc') : '';
+      });
+      rows.sort((a, b) => {
+        const aVal = a.cells[colIdx]?.textContent.trim() || '';
+        const bVal = b.cells[colIdx]?.textContent.trim() || '';
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) return dir ? aNum - bNum : bNum - aNum;
+        return dir ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      });
+      rows.forEach(r => table.querySelector('tbody').appendChild(r));
+    }
+
+    function getCookie(name) {
+      const c = document.cookie.split(';').find(x => x.trim().startsWith(name + '='));
+      return c ? decodeURIComponent(c.split('=').slice(1).join('=').trim()) : '';
+    }
+
+    function updateStatus(submissionId, status) {
+      fetch('/recruiter/candidate/' + submissionId + '/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrf_token') },
+        body: JSON.stringify({ status })
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) showToast('Status updated to: ' + status.replace(/_/g, ' '), 'success');
+          else showToast(d.error || 'Update failed', 'danger');
+        })
+        .catch(() => showToast('Failed to update status', 'danger'));
+    }
+
+    function openBreakdown(subId) {
+      fetch('/api/submission/' + subId + '/breakdown')
+        .then(r => r.json())
+        .then(d => {
+          if (d.error) throw new Error(d.error);
+          document.getElementById('bdCandidateName').textContent = d.candidate_name || 'Candidate';
+          document.getElementById('bdTotalScore').textContent = (d.total_score || 0).toFixed(1) + ' / 100';
+          document.getElementById('breakdownModal').style.display = 'flex';
+          const ctx = document.getElementById('bdChart').getContext('2d');
+          if (window._bdChart) window._bdChart.destroy();
+          window._bdChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: ['Keywords', 'Semantic', 'Experience', 'Format'],
+              datasets: [{
+                label: 'Score',
+                data: [
+                  ((d.keyword_score || 0) / 40 * 100).toFixed(1),
+                  ((d.semantic_score || 0) / 35 * 100).toFixed(1),
+                  ((d.experience_score || 0) / 15 * 100).toFixed(1),
+                  ((d.format_score || 0) / 10 * 100).toFixed(1)
+                ],
+                backgroundColor: 'rgba(124,58,237,0.15)',
+                borderColor: '#7C3AED',
+                pointBackgroundColor: '#06B6D4',
+                pointBorderColor: '#fff',
+                pointRadius: 5
+              }]
+            },
+            options: {
+              scales: {
+                r: {
+                  min: 0, max: 100,
+                  ticks: { color: '#94A3B8', backdropColor: 'transparent', font: { size: 10 } },
+                  grid: { color: 'rgba(255,255,255,0.08)' },
+                  pointLabels: { color: '#F8FAFC', font: { size: 12 } }
+                }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+          const gaps = d.skill_gap || [];
+          const gapEl = document.getElementById('bdSkillGap');
+          gapEl.innerHTML = gaps.length
+            ? '<p style="color:#94A3B8;font-size:0.85rem;margin-bottom:0.5rem;">Missing skills:</p><div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' +
+              gaps.map(s => '<span style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#F87171;padding:0.25rem 0.65rem;border-radius:999px;font-size:0.78rem;">' + s + '</span>').join('') + '</div>'
+            : '<p style="color:#34D399;font-size:0.85rem;">✓ No skill gaps detected</p>';
+        })
+        .catch(() => showToast('Could not load breakdown', 'danger'));
+    }
+
+    function closeBreakdown() {
+      document.getElementById('breakdownModal').style.display = 'none';
+    }
+
+    function setView(view) {
+      const tableEl = document.getElementById('candidates-section');
+      const kanbanEl = document.getElementById('kanbanView');
+      const tabTable = document.getElementById('tabTable');
+      const tabKanban = document.getElementById('tabKanban');
+      if (view === 'table') {
+        tableEl.style.display = '';
+        kanbanEl.style.display = 'none';
+        tabTable.className = 'btn-primary-custom';
+        tabKanban.className = 'btn-outline-custom';
+      } else {
+        tableEl.style.display = 'none';
+        kanbanEl.style.display = '';
+        tabTable.className = 'btn-outline-custom';
+        tabKanban.className = 'btn-primary-custom';
+      }
+      tabTable.style.padding = tabKanban.style.padding = '0.5rem 1.25rem';
+      tabTable.style.fontSize = tabKanban.style.fontSize = '0.85rem';
+    }
+
+    let dragId = null;
+    function onDragStart(e, id) {
+      dragId = id;
+      e.target.classList.add('dragging');
+    }
+    function onDrop(e, newStatus) {
+      e.preventDefault();
+      if (!dragId) return;
+      const card = document.getElementById('kcard-' + dragId);
+      if (card) {
+        document.getElementById('col-' + newStatus).appendChild(card);
+        card.classList.remove('dragging');
+      }
+      updateStatus(dragId, newStatus);
+      dragId = null;
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const isOpen = sidebar.classList.toggle('open');
+      overlay.style.display = isOpen ? 'block' : 'none';
+    }
+
+    function initMobileNav() {
+      const btn = document.getElementById('sidebarToggle');
+      if (!btn) return;
+      btn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+      btn.style.alignItems = 'center';
+      btn.style.justifyContent = 'center';
+    }
+    initMobileNav();
+    window.addEventListener('resize', initMobileNav);
+
+    document.getElementById('breakdownModal')?.addEventListener('click', e => {
+      if (e.target.id === 'breakdownModal') closeBreakdown();
+    });
+  </script>
+</body>
+</html>

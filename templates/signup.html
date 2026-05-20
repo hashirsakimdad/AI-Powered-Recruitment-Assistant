@@ -1,91 +1,173 @@
-{% extends "base.html" %}
-{% block title %}Sign Up - AI Recruit{% endblock %}
-{% block content %}
-<div class="auth-shell">
-  <div class="auth-card-clean">
-    <div class="auth-head-clean">
-      <h1 class="auth-title-clean">Create Account</h1>
-      <p class="auth-subtitle-clean">Join AI Recruit to get started</p>
-      <div class="auth-divider"></div>
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up — AI Recruit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <style>
+    .lo-orb { position:absolute; border-radius:50%; filter:blur(70px); pointer-events:none; }
+    .lo-orb-1 { width:320px;height:320px; background:rgba(124,58,237,0.25); top:-80px;left:-60px; animation:orbFloat 9s ease-in-out infinite alternate; }
+    .lo-orb-2 { width:240px;height:240px; background:rgba(6,182,212,0.18); bottom:-60px;right:60px; animation:orbFloat 12s ease-in-out infinite alternate-reverse; }
+    .lo-orb-3 { width:180px;height:180px; background:rgba(124,58,237,0.12); top:50%;left:50%; animation:orbFloat 7s ease-in-out infinite alternate; }
+    @keyframes orbFloat { from{transform:translate(0,0)} to{transform:translate(20px,15px)} }
+    @keyframes slideInRight { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+    .role-card {
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+      display: block;
+    }
+    .role-card:hover { border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.08); }
+    .role-card.selected { border-color: var(--primary); background: rgba(124,58,237,0.15); }
+    .fl-input:focus + label, .fl-input:not(:placeholder-shown) + label {
+      top: 0.4rem; font-size: 0.7rem; color: #7C3AED;
+    }
+    .float-label-wrap label {
+      position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+      color: #94A3B8; font-size: 0.9rem; transition: all 0.2s; pointer-events: none;
+    }
+    .float-label-wrap .fl-input:focus + label,
+    .float-label-wrap .fl-input:not(:placeholder-shown) + label {
+      top: 0.4rem; transform: none; font-size: 0.7rem; color: #7C3AED;
+    }
+    @media (max-width: 900px) {
+      .signup-split { flex-direction: column !important; }
+      .signup-left { flex: none !important; min-height: 40vh; }
+    }
+  </style>
+</head>
+<body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div data-flash-message="{{ message }}" data-flash-category="{{ category }}" style="display:none;" aria-hidden="true"></div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="signup-split" style="display:flex;min-height:100vh;">
+    <div class="signup-left" style="flex:0 0 58%;position:relative;overflow:hidden;background:linear-gradient(135deg,#0A0F2C 0%,#1E1B4B 100%);display:flex;align-items:center;justify-content:center;padding:3rem;">
+      <div class="lo-orb lo-orb-1"></div>
+      <div class="lo-orb lo-orb-2"></div>
+      <div class="lo-orb lo-orb-3"></div>
+      <div style="position:relative;z-index:2;text-align:center;max-width:460px;">
+        <h2 style="font-size:2rem;font-weight:800;color:#F8FAFC;margin-bottom:1rem;line-height:1.2;">
+          Join the Future<br>of Smart Hiring
+        </h2>
+        <p style="color:#94A3B8;font-size:1rem;line-height:1.6;">
+          Create your account as a recruiter or candidate and start using AI-powered resume screening today.
+        </p>
+        <div style="display:flex;gap:1rem;justify-content:center;margin-top:2rem;flex-wrap:wrap;">
+          <span style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#34D399;padding:0.35rem 1rem;border-radius:999px;font-size:0.8rem;">✓ Free to start</span>
+          <span style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);color:#22D3EE;padding:0.35rem 1rem;border-radius:999px;font-size:0.8rem;">✓ Instant scoring</span>
+        </div>
+      </div>
     </div>
 
-    <form method="POST" class="auth-form-clean" id="signupForm" novalidate>
-      <div class="auth-field">
-        <label class="auth-label" for="signupEmail">Email Address</label>
-        <div class="auth-input-wrap">
-          <i class="bi bi-envelope auth-input-ico" aria-hidden="true"></i>
-          <input
-            id="signupEmail"
-            name="email"
-            type="email"
-            class="auth-input"
-            placeholder="your@email.com"
-            required
-            autofocus
-            autocomplete="email"
-          />
+    <div style="flex:1;background:#0F1535;display:flex;align-items:center;justify-content:center;padding:3rem 2.5rem;">
+      <div style="width:100%;max-width:420px;animation:slideInRight 0.6s ease forwards;">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <span style="font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,#A78BFA,#22D3EE);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">✦ AI Recruit</span>
         </div>
-      </div>
+        <h1 style="font-size:1.35rem;font-weight:700;margin:0 0 0.25rem;text-align:center;">Create Account</h1>
+        <p style="text-align:center;color:#64748B;font-size:0.85rem;margin:0 0 1.5rem;">Get started in under a minute</p>
 
-      <div class="auth-field">
-        <label class="auth-label" for="signupPassword">Password</label>
-        <div class="auth-input-wrap">
-          <i class="bi bi-lock auth-input-ico" aria-hidden="true"></i>
-          <input
-            id="signupPassword"
-            name="password"
-            type="password"
-            class="auth-input"
-            placeholder="Create a password"
-            required
-            minlength="6"
-            autocomplete="new-password"
-          />
-        </div>
-      </div>
+        <form method="POST" action="{{ url_for('signup') }}" id="signupForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-      <div class="auth-field">
-        <label class="auth-label" for="signupConfirm">Confirm Password</label>
-        <div class="auth-input-wrap">
-          <i class="bi bi-shield-check auth-input-ico" aria-hidden="true"></i>
-          <input
-            id="signupConfirm"
-            name="confirm_password"
-            type="password"
-            class="auth-input"
-            placeholder="Re-enter password"
-            required
-            autocomplete="new-password"
-          />
-        </div>
-      </div>
+          <div class="float-label-wrap" style="position:relative;margin-bottom:1.25rem;">
+            <input type="email" name="email" id="signupEmail" required placeholder=" " class="fl-input"
+              style="width:100%;padding:1rem 1rem 0.4rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);color:#F8FAFC;font-size:0.95rem;outline:none;" autocomplete="email" />
+            <label for="signupEmail">Email address</label>
+          </div>
 
-      <div class="auth-field">
-        <label class="auth-label">Role</label>
-        <div class="auth-role">
-          <label class="auth-role-option">
-            <input type="radio" name="role" value="candidate" checked />
-            <span>Candidate</span>
-          </label>
-          <label class="auth-role-option">
-            <input type="radio" name="role" value="recruiter" />
-            <span>Recruiter</span>
-          </label>
-        </div>
-      </div>
+          <div style="position:relative;margin-bottom:0.5rem;" class="float-label-wrap">
+            <input type="password" name="password" id="signupPassword" required placeholder=" " class="fl-input" minlength="6"
+              style="width:100%;padding:1rem 1rem 0.4rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);color:#F8FAFC;font-size:0.95rem;outline:none;" autocomplete="new-password" />
+            <label for="signupPassword">Password</label>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:999px;margin-bottom:1.25rem;overflow:hidden;">
+            <div id="strengthBar" style="height:100%;width:0;background:transparent;border-radius:999px;transition:all 0.3s;"></div>
+          </div>
 
-      <button class="auth-submit" type="submit">
-        Create Account
-      </button>
-    </form>
+          <div class="float-label-wrap" style="position:relative;margin-bottom:1.5rem;">
+            <input type="password" name="confirm_password" id="signupConfirm" required placeholder=" " class="fl-input"
+              style="width:100%;padding:1rem 1rem 0.4rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);color:#F8FAFC;font-size:0.95rem;outline:none;" autocomplete="new-password" />
+            <label for="signupConfirm">Confirm password</label>
+          </div>
 
-    <div class="auth-bottom">
-      <div class="auth-bottom-text">
-        Already have an account?
-        <a class="auth-link" href="{{ url_for('login') }}">Sign in</a>
+          <p style="font-size:0.85rem;color:#94A3B8;margin:0 0 0.75rem;">I am a…</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;">
+            <label class="role-card selected" id="roleRecruiter">
+              <input type="radio" name="role" value="recruiter" style="display:none;" onchange="selectRoleCard('recruiter')" checked />
+              <span style="font-size:1.5rem;">🏢</span>
+              <span style="font-weight:600;font-size:0.9rem;display:block;margin-top:0.4rem;">Recruiter</span>
+              <span style="color:#94A3B8;font-size:0.78rem;">Post jobs, review candidates</span>
+            </label>
+            <label class="role-card" id="roleCandidate">
+              <input type="radio" name="role" value="candidate" style="display:none;" onchange="selectRoleCard('candidate')" />
+              <span style="font-size:1.5rem;">👤</span>
+              <span style="font-weight:600;font-size:0.9rem;display:block;margin-top:0.4rem;">Candidate</span>
+              <span style="color:#94A3B8;font-size:0.78rem;">Apply to jobs, get feedback</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary-custom" style="width:100%;padding:0.85rem;font-size:1rem;">Create Account</button>
+        </form>
+
+        <p style="text-align:center;margin-top:1.25rem;color:#64748B;font-size:0.85rem;">
+          Already have an account? <a href="{{ url_for('login') }}" style="color:#A78BFA;text-decoration:none;">Sign in</a>
+        </p>
+        <p style="text-align:center;margin-top:1rem;">
+          <button type="button" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+        </p>
       </div>
-      <div class="auth-builtby">⚡ Built by Hashir Sakimdad</div>
     </div>
   </div>
-</div>
-{% endblock %}
+
+  <script>
+    document.getElementById('signupPassword').addEventListener('input', function() {
+      const val = this.value;
+      const strength = [
+        val.length >= 8,
+        /[A-Z]/.test(val),
+        /[0-9]/.test(val),
+        /[^A-Za-z0-9]/.test(val)
+      ].filter(Boolean).length;
+      const bar = document.getElementById('strengthBar');
+      const colors = ['#EF4444', '#F59E0B', '#10B981', '#10B981'];
+      const widths = ['25%', '50%', '75%', '100%'];
+      bar.style.width = val.length ? (widths[strength - 1] || '10%') : '0';
+      bar.style.background = val.length ? (colors[strength - 1] || '#EF4444') : 'transparent';
+    });
+
+    function selectRoleCard(role) {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      const id = role === 'recruiter' ? 'roleRecruiter' : 'roleCandidate';
+      document.getElementById(id).classList.add('selected');
+      document.querySelector('#' + id + ' input[type=radio]').checked = true;
+    }
+    selectRoleCard('recruiter');
+
+    document.querySelectorAll('.role-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const radio = card.querySelector('input[type=radio]');
+        if (radio) {
+          radio.checked = true;
+          selectRoleCard(radio.value);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

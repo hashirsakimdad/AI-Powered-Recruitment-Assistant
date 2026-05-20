@@ -1,8 +1,35 @@
 from typing import Dict, List, Tuple
 
-from .section_feedback import generate_section_aware_feedback
 from .feedback_validator import validate_feedback_against_resume
 from .scorer import score_candidate
+from .section_feedback import generate_section_aware_feedback
+
+SYSTEM_PROMPT = """
+You are an expert recruitment advisor. When analyzing a
+candidate's resume against a job posting, always respond
+with EXACTLY this structure:
+
+## Overall Assessment
+[2 sentences: how well the candidate fits overall]
+
+## Top 3 Missing Skills
+1. [Skill name] — [Why it matters for this role] — [1-week learning plan]
+2. [Skill name] — [Why it matters for this role] — [1-week learning plan]
+3. [Skill name] — [Why it matters for this role] — [1-week learning plan]
+
+## What You Did Well
+- [Strength 1]
+- [Strength 2]
+- [Strength 3]
+
+## Recommended Next Steps
+1. [Specific actionable step with timeframe]
+2. [Specific actionable step with timeframe]
+3. [Specific actionable step with timeframe]
+
+Be specific. Mention actual technologies, courses, or projects.
+Never give generic advice.
+"""
 
 
 def _rank_suggestions_by_importance(
@@ -61,6 +88,68 @@ def _rank_suggestions_by_importance(
     scored_suggestions.sort(key=lambda x: (-x[0], suggestions.index(x[1])))
     
     return [suggestion for _, suggestion in scored_suggestions]
+
+
+def _build_structured_markdown(
+    overall_score: float,
+    missing: List[str],
+    strengths: List[str],
+    suggestions: List[str],
+    job_title: str,
+) -> str:
+    """Format feedback as markdown per SYSTEM_PROMPT structure."""
+    if overall_score >= 70:
+        assessment = (
+            f"Your profile aligns well with **{job_title}** (score {overall_score:.1f}/100). "
+            "You demonstrate relevant skills and experience for this role."
+        )
+    elif overall_score >= 50:
+        assessment = (
+            f"You show moderate fit for **{job_title}** (score {overall_score:.1f}/100). "
+            "Strengthening a few gaps below would improve your competitiveness."
+        )
+    else:
+        assessment = (
+            f"Your resume needs targeted improvements for **{job_title}** (score {overall_score:.1f}/100). "
+            "Focus on the missing skills and experience signals recruiters expect."
+        )
+
+    missing_lines = []
+    for i, skill in enumerate((missing or ["Role-specific tooling"])[:3], 1):
+        missing_lines.append(
+            f"{i}. **{skill.title()}** — Required for this role — "
+            f"Spend week {i} on a hands-on tutorial and one portfolio mini-project using {skill}."
+        )
+    while len(missing_lines) < 3:
+        n = len(missing_lines) + 1
+        missing_lines.append(
+            f"{n}. **Industry terminology** — Improves ATS matching — "
+            f"Mirror keywords from the job description in your project bullets this week."
+        )
+
+    strength_items = strengths[:3] if strengths else [
+        "Clear resume structure",
+        "Relevant background for the role",
+        "Willingness to close skill gaps quickly",
+    ]
+    step_items = suggestions[:3] if suggestions else [
+        "Update your skills section to mirror required technologies (this week)",
+        "Add one quantified achievement per recent role (3 days)",
+        "Submit a revised resume after practicing one missing skill (7 days)",
+    ]
+
+    return f"""## Overall Assessment
+{assessment}
+
+## Top 3 Missing Skills
+{chr(10).join(missing_lines)}
+
+## What You Did Well
+{chr(10).join('- ' + s for s in strength_items)}
+
+## Recommended Next Steps
+{chr(10).join(f'{i + 1}. {s}' for i, s in enumerate(step_items))}
+"""
 
 
 def generate_feedback(profile: Dict, job: Dict[str, str]) -> Dict[str, List[str] | str]:
@@ -202,9 +291,30 @@ def generate_feedback(profile: Dict, job: Dict[str, str]) -> Dict[str, List[str]
         missing
     )
     
+    strengths = []
+    matched_skills = required_skills.intersection(resume_skills)
+    if matched_skills:
+        strengths.append(f"Matched skills: {', '.join(list(matched_skills)[:4])}.")
+    if semantic_score >= 50:
+        strengths.append("Resume language aligns with the job description.")
+    if experience_bonus >= 50:
+        strengths.append("Experience level supports the role requirements.")
+    if not strengths:
+        strengths.append("Resume is parseable with identifiable sections.")
+
+    markdown_response = _build_structured_markdown(
+        overall_score,
+        missing,
+        strengths,
+        ranked_suggestions,
+        job.get("title", "this role"),
+    )
+
     # Build feedback response
     feedback = {
-        "summary": summary,
+        "summary": markdown_response,
+        "markdown_response": markdown_response,
+        "system_prompt": SYSTEM_PROMPT,
         "missing_skills": missing,
         "suggestions": ranked_suggestions,
         "section_feedback": section_feedback,

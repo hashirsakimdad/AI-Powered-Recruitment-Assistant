@@ -63,6 +63,16 @@ class ResumeSubmission(db.Model):
     # Skill inference data
     inferred_skills = db.Column(db.JSON, nullable=True)  # Skills inferred from experience/projects
     explicit_skills = db.Column(db.JSON, nullable=True)  # Explicitly listed skills
+    # Score breakdown columns
+    keyword_score = db.Column(db.Float, default=0.0)
+    semantic_score = db.Column(db.Float, default=0.0)
+    experience_score = db.Column(db.Float, default=0.0)
+    format_score = db.Column(db.Float, default=0.0)
+    skill_gap = db.Column(db.Text, default="")
+
+    @property
+    def resume_path(self) -> str:
+        return self.file_path
 
     def as_dict(self) -> dict:
         return {
@@ -78,13 +88,14 @@ class ResumeSubmission(db.Model):
 
 
 def seed_demo_users(db_session) -> None:
-    if not User.query.filter_by(email="recruiter@example.com").first():
-        recruiter = User(email="recruiter@example.com", role="recruiter")
-        recruiter.set_password("recruiter123")
-        db_session.add(recruiter)
-    if not User.query.filter_by(email="candidate@example.com").first():
-        candidate = User(email="candidate@example.com", role="candidate")
-        candidate.set_password("candidate123")
-        db_session.add(candidate)
+    demos = [
+        ("recruiter@demo.com", "recruiter", "demo123"),
+        ("candidate@demo.com", "candidate", "demo123"),
+    ]
+    for email, role, password in demos:
+        if not User.query.filter_by(email=email).first():
+            user = User(email=email, role=role)
+            user.set_password(password)
+            db_session.add(user)
     db_session.commit()
 

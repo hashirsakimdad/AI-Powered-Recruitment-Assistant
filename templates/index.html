@@ -1,299 +1,304 @@
-{% extends "base.html" %}
-{% block title %}AI-Powered Resume Screening & Recruitment Platform{% endblock %}
-{% block content %}
-<div data-landing>
-  <!-- Fixed morphing blobs behind everything -->
-  <div class="blob blob--1" aria-hidden="true"></div>
-  <div class="blob blob--2" aria-hidden="true"></div>
-  <div class="blob blob--3" aria-hidden="true"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Powered Recruitment Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <style>
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: rgba(124,58,237,0.2);
+      top: -100px; left: -100px;
+      animation: orbFloat 8s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: rgba(6,182,212,0.15);
+      bottom: -80px; right: -80px;
+      animation: orbFloat 10s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes orbFloat {
+      from { transform: translate(0,0); }
+      to   { transform: translate(30px, 20px); }
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.4);
+      color: #A78BFA;
+      padding: 0.4rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      color: #F8FAFC;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #A78BFA, #22D3EE);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: #94A3B8;
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+    .hero-ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 4rem; }
+    @keyframes floatAnim {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
+    }
+    .float-card {
+      display: inline-block;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      margin: 0 0.5rem;
+    }
+    .float-1 { animation: floatAnim 3s ease-in-out infinite; }
+    .float-2 { animation: floatAnim 3s ease-in-out infinite 0.5s; }
+    .float-3 { animation: floatAnim 3s ease-in-out infinite 1s; }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+    .feature-card:hover .feature-icon { transform: scale(1.15) rotate(5deg); }
+    .feature-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .feature-card p  { color: #94A3B8; font-size: 0.9rem; line-height: 1.6; }
+    .timeline { position: relative; }
+    .timeline-line {
+      display: block;
+      position: absolute;
+      top: 28px; left: 15%; right: 15%;
+      height: 2px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+    }
+    .timeline-progress { display: block; }
+    .orb { display: block; }
+    .timeline-progress {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 2px;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .timeline-steps { display: flex; justify-content: space-around; position: relative; flex-wrap: wrap; gap: 2rem; }
+    .timeline-step  { flex: 1; max-width: 250px; min-width: 200px; padding: 0 1rem; text-align: center; }
+    .step-num {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 700;
+      margin: 0 auto 1.25rem;
+      position: relative; z-index: 2;
+    }
+    .timeline-step h4 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .timeline-step p  { font-size: 0.85rem; color: #94A3B8; line-height: 1.6; }
+    .counter-val { font-size: 2.5rem; font-weight: 800; }
+    .counter-label { color: #94A3B8; font-size: 0.9rem; margin-top: 0.5rem; }
+    #typewriter::after {
+      content: '|';
+      animation: blink 0.8s step-end infinite;
+      color: #22D3EE;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    @media (max-width: 768px) {
+      .timeline-line { display: none; }
+      .timeline-steps { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body class="page-enter">
 
-  <!-- Optional galaxy canvas (kept) -->
-  <div class="landing-hero-wrapper">
-    <!-- HERO -->
-    <section class="landing-hero-new">
-      <div class="container landing-container">
-        <div class="text-center landing-hero-inner">
-          <div class="hero-badge" data-reveal>
-            ✦ AI-Powered Recruitment
-          </div>
+  <section id="hero" style="position:relative; min-height:100vh; display:flex; align-items:center; overflow:hidden;">
+    <section id="particles-js" style="position:absolute;inset:0;z-index:0;" aria-hidden="true"></section>
+    <span class="orb orb-1" aria-hidden="true"></span>
+    <span class="orb orb-2" aria-hidden="true"></span>
 
-          <h1 class="hero-title" data-reveal>
-            The Future of Hiring is Here
-          </h1>
-
-          <p class="hero-subtitle" data-reveal>
-            We help you find <span class="morph-word" data-morph="hero">top talent</span>
-          </p>
-
-          <p class="hero-desc" data-reveal>
-            Automate resume screening, rank candidates instantly, and deliver actionable feedback—powered by modern AI that understands skills and context.
-          </p>
-
-          <div class="hero-ctas" data-reveal>
-            <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg cta-pulse">
-              Get Started Free →
-            </a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
-              View Demo
-            </a>
-          </div>
-
-          <div class="hero-preview" data-reveal>
-            <div class="preview-card">
-              <div class="preview-top">
-                <div class="preview-pill">
-                  <span class="dot dot--ok"></span>Live Screening
-                </div>
-                <div class="preview-morph">
-                  <span class="text-secondary small">Mode:</span>
-                  <span class="morph-word morph-word--nav" data-morph="nav">Smarter Hiring</span>
-                </div>
-              </div>
-              <div class="preview-main">
-                <div class="match">
-                  <div class="match__score">85%</div>
-                  <div class="match__label text-secondary">Match Score</div>
-                </div>
-                <div class="bars">
-                  <div class="bar">
-                    <div class="bar__label text-secondary small">Semantic Similarity</div>
-                    <div class="bar__track"><div class="bar__fill" style="width: 86%"></div></div>
-                  </div>
-                  <div class="bar">
-                    <div class="bar__label text-secondary small">Skill Alignment</div>
-                    <div class="bar__track"><div class="bar__fill bar__fill--2" style="width: 79%"></div></div>
-                  </div>
-                </div>
-              </div>
-              <div class="preview-tags">
-                <span class="badge bg-primary-subtle text-primary">Python</span>
-                <span class="badge bg-primary-subtle text-primary">SQL</span>
-                <span class="badge bg-primary-subtle text-primary">React</span>
-                <span class="badge badge--success">Shortlisted</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <section style="position:relative;z-index:2; max-width:1100px; margin:0 auto; padding:0 2rem; text-align:center; width:100%;">
+      <span class="hero-badge">✦ AI-Powered Recruitment</span>
+      <h1 class="hero-title">
+        The Smarter Way to<br>
+        <span id="typewriter" class="gradient-text"></span>
+      </h1>
+      <p class="hero-sub">
+        Automatically screen, score, and rank resumes using semantic AI.
+        Save 80% of screening time. Zero bias. Just talent.
+      </p>
+      <p class="hero-ctas" style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:4rem;">
+        <a href="/login" class="btn-primary-custom">Get Started as Recruiter →</a>
+        <a href="/login" class="btn-outline-custom">Apply as Candidate</a>
+      </p>
+      <p class="hero-floats">
+        <span class="float-card float-1">📄 Resume Uploaded</span>
+        <span class="float-card float-2">🧠 AI Scoring... 94/100</span>
+        <span class="float-card float-3">✅ Shortlisted!</span>
+      </p>
     </section>
-  </div>
-
-  <!-- STATS -->
-  <section class="landing-section" id="stats" data-reveal>
-    <div class="container landing-container">
-      <div class="stats-grid" data-reveal-group="stats">
-        <div class="stat-card" data-reveal-item="stats">
-          <div class="stat-icon">🎯</div>
-          <div class="stat-number" data-countup="2,400+">0</div>
-          <div class="stat-label">Resumes Analyzed</div>
-        </div>
-        <div class="stat-card" data-reveal-item="stats">
-          <div class="stat-icon">💼</div>
-          <div class="stat-number" data-countup="380+">0</div>
-          <div class="stat-label">Jobs Posted</div>
-        </div>
-        <div class="stat-card" data-reveal-item="stats">
-          <div class="stat-icon">🏢</div>
-          <div class="stat-number" data-countup="120+">0</div>
-          <div class="stat-label">Companies Using</div>
-        </div>
-        <div class="stat-card" data-reveal-item="stats">
-          <div class="stat-icon">⚡</div>
-          <div class="stat-number" data-countup="< 15sec">0</div>
-          <div class="stat-label">Avg. Analysis Time</div>
-        </div>
-      </div>
-    </div>
   </section>
 
-  <!-- FEATURES -->
-  <section class="landing-section" id="features" data-reveal>
-    <div class="container landing-container">
-      <div class="section-head">
-        <h2 class="section-title">Everything You Need</h2>
-        <p class="section-subtitle text-secondary">Powerful AI tools for both sides of hiring</p>
-      </div>
-
-      <div class="features-grid" data-reveal-group="features">
-        <div class="feature-new" data-reveal-item="features">
-          <div class="feature-ico">🧠</div>
-          <div class="feature-title">Semantic AI Matching</div>
-          <div class="feature-desc">Goes beyond keywords — understands meaning and context of your resume</div>
-        </div>
-        <div class="feature-new" data-reveal-item="features">
-          <div class="feature-ico">🎯</div>
-          <div class="feature-title">Instant Score & Feedback</div>
-          <div class="feature-desc">Get a 0-100% match score with detailed improvement suggestions in seconds</div>
-        </div>
-        <div class="feature-new" data-reveal-item="features">
-          <div class="feature-ico">📊</div>
-          <div class="feature-title">Candidate Ranking</div>
-          <div class="feature-desc">Auto-sorted leaderboard so recruiters always see the best matches first</div>
-        </div>
-        <div class="feature-new" data-reveal-item="features">
-          <div class="feature-ico">📥</div>
-          <div class="feature-title">One-Click CSV Export</div>
-          <div class="feature-desc">Download full candidate reports instantly for your team</div>
-        </div>
-        <div class="feature-new" data-reveal-item="features">
-          <div class="feature-ico">🔍</div>
-          <div class="feature-title">Resume Validation AI</div>
-          <div class="feature-desc">Custom ML model ensures only real resumes are processed</div>
-        </div>
-        <div class="feature-new" data-reveal-item="features">
-          <div class="feature-ico">📱</div>
-          <div class="feature-title">Works Everywhere</div>
-          <div class="feature-desc">Fully responsive — desktop, tablet and mobile ready</div>
-        </div>
-      </div>
-    </div>
+  <section id="features" style="padding:6rem 2rem; max-width:1100px; margin:0 auto;">
+    <header style="text-align:center; margin-bottom:3rem;">
+      <h2 style="font-size:2.2rem; font-weight:700;">Everything you need to hire smarter</h2>
+      <p style="color:#94A3B8; margin-top:0.75rem;">Built for speed. Designed for fairness. Powered by AI.</p>
+    </header>
+    <section style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem;">
+      <article class="glass-card feature-card">
+        <p class="feature-icon">🧠</p>
+        <h3>AI Resume Scoring</h3>
+        <p>Semantic NLP scores each resume across 4 dimensions: keywords, context, experience, and structure.</p>
+      </article>
+      <article class="glass-card feature-card">
+        <p class="feature-icon">📊</p>
+        <h3>Smart Analytics</h3>
+        <p>Visual dashboards with score breakdowns, skill-gap analysis, and candidate ranking charts.</p>
+      </article>
+      <article class="glass-card feature-card">
+        <p class="feature-icon">💬</p>
+        <h3>Instant AI Feedback</h3>
+        <p>Candidates get personalized skill-gap feedback and a concrete improvement plan instantly.</p>
+      </article>
+    </section>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section class="landing-section" id="how" data-reveal>
-    <div class="container landing-container">
-      <div class="section-head">
-        <h2 class="section-title">How AI Recruit Works</h2>
-        <p class="section-subtitle text-secondary">A simple flow with powerful results</p>
-      </div>
-
-      <div class="how-wrap">
-        <div class="how-line" aria-hidden="true"></div>
-        <div class="how-grid" data-reveal-group="how">
-          <div class="how-step" data-reveal-item="how">
-            <div class="how-circle">
-              <span class="how-num">1</span>
-              <i class="bi bi-file-earmark-arrow-up"></i>
-            </div>
-            <div class="how-title">Upload Resume</div>
-            <div class="how-desc">Drag & drop your PDF resume to get started instantly</div>
-          </div>
-          <div class="how-step" data-reveal-item="how">
-            <div class="how-circle">
-              <span class="how-num">2</span>
-              <i class="bi bi-cpu"></i>
-            </div>
-            <div class="how-title">AI Analyzes</div>
-            <div class="how-desc">Our ML model reads, scores and compares against job requirements</div>
-          </div>
-          <div class="how-step" data-reveal-item="how">
-            <div class="how-circle">
-              <span class="how-num">3</span>
-              <i class="bi bi-stars"></i>
-            </div>
-            <div class="how-title">Get Results</div>
-            <div class="how-desc">See your match score, missing skills and personalized improvement tips</div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <section id="how" style="padding:6rem 2rem; background:rgba(255,255,255,0.02);">
+    <section style="max-width:1100px; margin:0 auto; text-align:center;">
+      <h2 style="font-size:2.2rem; font-weight:700; margin-bottom:3rem;">How it works</h2>
+      <section class="timeline">
+        <span class="timeline-line"><span class="timeline-progress" id="tlProgress"></span></span>
+        <section class="timeline-steps">
+          <article class="timeline-step">
+            <p class="step-num">1</p>
+            <h4>Upload Resume</h4>
+            <p>Candidate uploads a PDF or Word file. Takes under 10 seconds.</p>
+          </article>
+          <article class="timeline-step">
+            <p class="step-num">2</p>
+            <h4>AI Scores It</h4>
+            <p>Our NLP engine analyzes keywords, experience, semantics, and structure.</p>
+          </article>
+          <article class="timeline-step">
+            <p class="step-num">3</p>
+            <h4>Get Ranked</h4>
+            <p>Recruiters see a ranked leaderboard. Candidates get instant feedback.</p>
+          </article>
+        </section>
+      </section>
+    </section>
   </section>
 
-  <!-- TESTIMONIALS -->
-  <section class="landing-section" id="testimonials" data-reveal>
-    <div class="container landing-container">
-      <div class="section-head">
-        <h2 class="section-title">What People Are Saying</h2>
-        <p class="section-subtitle text-secondary">Trusted by recruiters and candidates</p>
-      </div>
-
-      <div class="testimonials-grid" data-reveal-group="t">
-        <div class="t-card" data-reveal-item="t">
-          <div class="t-quote">“</div>
-          <div class="t-stars">★★★★★</div>
-          <p class="t-text">AI Recruit saved us hours of manual screening. The match scores are incredibly accurate.</p>
-          <div class="t-person">
-            <div class="t-avatar">S</div>
-            <div>
-              <div class="t-name">Sarah K.</div>
-              <div class="t-role">HR Manager</div>
-            </div>
-          </div>
-        </div>
-        <div class="t-card" data-reveal-item="t">
-          <div class="t-quote">“</div>
-          <div class="t-stars">★★★★★</div>
-          <p class="t-text">I finally understand WHY I'm not getting callbacks. The AI feedback was a game changer for my job search.</p>
-          <div class="t-person">
-            <div class="t-avatar t-avatar--2">A</div>
-            <div>
-              <div class="t-name">Ahmed R.</div>
-              <div class="t-role">Software Engineer</div>
-            </div>
-          </div>
-        </div>
-        <div class="t-card" data-reveal-item="t">
-          <div class="t-quote">“</div>
-          <div class="t-stars">★★★★★</div>
-          <p class="t-text">We shortlisted our top 5 candidates in under 10 minutes. Absolutely brilliant tool.</p>
-          <div class="t-person">
-            <div class="t-avatar t-avatar--3">Z</div>
-            <div>
-              <div class="t-name">Zara M.</div>
-              <div class="t-role">Talent Acquisition Lead</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <section id="stats" style="padding:5rem 2rem; max-width:900px; margin:0 auto; text-align:center;">
+    <section style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:2rem;">
+      <article class="stat-counter" data-target="500">
+        <p class="counter-val gradient-text">0</p>
+        <p class="counter-label">Resumes Processed</p>
+      </article>
+      <article class="stat-counter" data-target="95" data-suffix="%">
+        <p class="counter-val gradient-text">0</p>
+        <p class="counter-label">% Scoring Accuracy</p>
+      </article>
+      <article class="stat-counter" data-target="3" data-suffix="x">
+        <p class="counter-val gradient-text">0</p>
+        <p class="counter-label">Faster Screening</p>
+      </article>
+    </section>
   </section>
 
-  <!-- FINAL CTA -->
-  <section class="final-cta" data-reveal>
-    <div class="container landing-container">
-      <div class="final-cta-inner">
-        <div>
-          <h2 class="final-title">Ready to Hire Smarter?</h2>
-          <p class="final-sub text-secondary">
-            Join hundreds of companies already using AI Recruit to find their perfect candidates.
-          </p>
-        </div>
-        <div>
-          <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg cta-pulse">
-            Get Started For Free →
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="home-footer">
-    <div class="container landing-container">
-      <div class="home-footer-top">
-        <div class="home-foot-brand">
-          <div class="home-foot-logo">AI Recruit</div>
-          <div class="home-foot-tagline">AI-powered hiring for the modern world</div>
-        </div>
-
-        <div class="home-foot-links">
-          <div class="home-foot-title">Platform</div>
-          <div class="home-foot-list">
-            <a href="#stats">Home</a>
-            <a href="#features">Features</a>
-            <a href="#how">How It Works</a>
-            <a href="{{ url_for('login') }}">Sign In</a>
-            <a href="{{ url_for('signup') }}">Sign Up</a>
-          </div>
-        </div>
-
-        <div class="home-foot-project">
-          <div class="home-foot-title">Project</div>
-          <div class="home-foot-list">
-            <div class="home-foot-item">Final Year Project</div>
-            <a href="https://github.com/" target="_blank" rel="noopener">
-              <i class="bi bi-github me-2"></i>Open Source on GitHub
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="home-footer-bar">
-        <div>© 2025 AI Recruit. All rights reserved.</div>
-        <div>⚡ Built by Hashir Sakimdad</div>
-      </div>
-    </div>
+  <footer style="background:var(--bg2); border-top:1px solid rgba(255,255,255,0.06); padding:2rem; text-align:center; color:#475569; font-size:0.85rem;">
+    AI-Powered Recruitment Assistant • Built with ❤️ and AI • 2024
   </footer>
-</div>
-{% endblock %}
 
+  <script>
+    const words = ["Hire Smarter.", "Score Faster.", "Match Better.", "Bias-Free."];
+    let wi = 0, ci = 0, deleting = false;
+    const el = document.getElementById('typewriter');
+    function type() {
+      const word = words[wi];
+      if (!deleting) {
+        el.textContent = word.slice(0, ++ci);
+        if (ci === word.length) { deleting = true; setTimeout(type, 1800); return; }
+      } else {
+        el.textContent = word.slice(0, --ci);
+        if (ci === 0) { deleting = false; wi = (wi+1) % words.length; }
+      }
+      setTimeout(type, deleting ? 60 : 100);
+    }
+    type();
+
+    const tlSection = document.getElementById('how');
+    const tlObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          document.getElementById('tlProgress').style.width = '100%';
+        }
+      });
+    }, { threshold: 0.3 });
+    if (tlSection) tlObserver.observe(tlSection);
+
+    function animateCounter(el) {
+      const target = parseInt(el.dataset.target, 10);
+      const val = el.querySelector('.counter-val');
+      let current = 0;
+      const step = target / 60;
+      const suffix = el.dataset.suffix || '';
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        val.textContent = Math.floor(current) + suffix;
+        if (current >= target) clearInterval(timer);
+      }, 24);
+    }
+    const counterObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { animateCounter(e.target); counterObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('.stat-counter').forEach(el => counterObs.observe(el));
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof particlesJS !== 'undefined' && document.getElementById('particles-js')) {
+        particlesJS('particles-js', {
+          particles: {
+            number: { value: 55, density: { enable: true, value_area: 900 } },
+            color: { value: ['#7C3AED', '#06B6D4', '#ffffff'] },
+            shape: { type: 'circle' },
+            opacity: { value: 0.25, random: true },
+            size: { value: 2.5, random: true },
+            line_linked: { enable: true, distance: 130, color: '#7C3AED', opacity: 0.1, width: 0.8 },
+            move: { enable: true, speed: 0.8, random: true, out_mode: 'out' }
+          },
+          interactivity: {
+            detect_on: 'canvas',
+            events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: false } },
+            modes: { repulse: { distance: 80, duration: 0.4 } }
+          },
+          retina_detect: true
+        });
+      }
+    });
+  </script>
+</body>
+</html>

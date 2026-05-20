@@ -1,6 +1,9 @@
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.5
+Flask-WTF==1.2.1
+Flask-Limiter==3.8.0
+Flask-Mail==0.10.0
 python-dotenv==1.0.1
 Werkzeug==3.0.4
 requests==2.32.3
@@ -16,8 +19,11 @@ PyMuPDF==1.24.10
 docx2txt==0.8
 gunicorn==22.0.0
 python-dateutil==2.9.0
-# OCR support (optional - for scanned PDFs)
+python-magic-bin==0.4.14; sys_platform == 'win32'
+python-magic==0.4.27; sys_platform != 'win32'
+reportlab==4.2.5
+bleach==6.1.0
+email-validator==2.2.0
 pytesseract>=0.3.10
 pdf2image>=1.16.3
 Pillow>=10.0.0
-

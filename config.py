@@ -6,12 +6,11 @@ BASE_DIR_ABS = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
+    WTF_CSRF_ENABLED = True
 
-    # Prefer DATABASE_URL, but ensure SQLite points to an absolute file path.
     _env_db_url = os.environ.get("DATABASE_URL")
     if _env_db_url and _env_db_url.startswith("sqlite:///"):
-        # Convert relative sqlite path (e.g. sqlite:///instance/app.db) to absolute.
         _sqlite_path = _env_db_url[len("sqlite:///") :]
         if not os.path.isabs(_sqlite_path):
             _env_db_url = "sqlite:///" + os.path.join(BASE_DIR_ABS, _sqlite_path)
@@ -24,8 +23,12 @@ class Config:
     UPLOAD_FOLDER = os.getenv(
         "UPLOAD_FOLDER", str(BASE_DIR.joinpath("instance", "uploads"))
     )
-    MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB per resume
-    ALLOWED_EXTENSIONS = {"pdf", "docx"}
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+    ALLOWED_EXTENSIONS = {"pdf", "docx", "doc"}
+
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    PERMANENT_SESSION_LIFETIME = 3600
 
 
 def ensure_instance_dirs():
@@ -33,4 +36,3 @@ def ensure_instance_dirs():
     uploads.mkdir(parents=True, exist_ok=True)
     instance = Path(BASE_DIR_ABS).joinpath("instance")
     instance.mkdir(parents=True, exist_ok=True)
-

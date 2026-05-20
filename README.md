@@ -18,7 +18,7 @@ Python/Flask prototype featuring dual dashboards (recruiter and candidate), resu
    ```bash
    flask run
    ```
-5. Demo users: recruiter@example.com / recruiter123, candidate@example.com / candidate123.
+5. Demo users: recruiter@demo.com / demo123, candidate@demo.com / demo123.
 
 ## Features
 - Recruiter dashboard: job creation, ranked candidate list, CSV export.
