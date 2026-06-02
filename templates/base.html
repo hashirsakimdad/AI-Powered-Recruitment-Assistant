@@ -26,19 +26,30 @@
           <ul class="navbar-nav ms-auto align-items-center">
             {% if session.get('role') == 'recruiter' %}
             <li class="nav-item">
-              <a class="nav-link {% if request.endpoint == 'recruiter_dashboard' %}active{% endif %}" href="{{ url_for('recruiter_dashboard') }}">
+              <a class="nav-link {% if request.endpoint == 'recruiter.dashboard' %}active{% endif %}" href="{{ url_for('recruiter.dashboard') }}">
                 <i class="bi bi-speedometer2 me-1"></i>Dashboard
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.endpoint == 'create_job' %}active{% endif %}" href="{{ url_for('create_job') }}">
+              <a class="nav-link {% if request.endpoint == 'recruiter.create_job' %}active{% endif %}" href="{{ url_for('recruiter.create_job') }}">
                 <i class="bi bi-plus-circle me-1"></i>Create Job
+              </a>
+            </li>
+            {% elif session.get('role') == 'admin' %}
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-shield-lock me-1"></i>Admin
               </a>
             </li>
             {% else %}
             <li class="nav-item">
-              <a class="nav-link {% if request.endpoint == 'candidate_dashboard' %}active{% endif %}" href="{{ url_for('candidate_dashboard') }}">
+              <a class="nav-link {% if request.endpoint == 'candidate.dashboard' %}active{% endif %}" href="{{ url_for('candidate.dashboard') }}">
                 <i class="bi bi-person-workspace me-1"></i>My Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'candidate.profile' %}active{% endif %}" href="{{ url_for('candidate.profile') }}">
+                <i class="bi bi-person me-1"></i>My Profile
               </a>
             </li>
             {% endif %}
@@ -52,7 +63,7 @@
               </ul>
             </li>
             <li class="nav-item">
-              <a class="btn btn-outline-danger btn-sm ms-2" href="{{ url_for('logout') }}">
+              <a class="btn btn-outline-danger btn-sm ms-2" href="{{ url_for('auth.logout') }}">
                 <i class="bi bi-box-arrow-right me-1"></i>Logout
               </a>
             </li>

@@ -1,12 +1,13 @@
 import json
 import os
+import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from werkzeug.utils import secure_filename
 
-from ai import extract_text, parse_resume, score_candidate, generate_feedback
+from ai import extract_text, generate_feedback, parse_resume, score_candidate
 from ai.resume_detector import validate_resume_document
 from models import JobPosting, ResumeSubmission, db
 
@@ -41,6 +42,19 @@ def validate_mime_type(filepath: Path) -> None:
 
 
 def handle_upload(file_storage, upload_dir: str, allowed_extensions: set[str]) -> Path:
+    """Save and validate an uploaded resume file.
+
+    Args:
+        file_storage: Werkzeug FileStorage from the request.
+        upload_dir: Directory path for stored uploads.
+        allowed_extensions: Permitted file extensions.
+
+    Returns:
+        Path to the saved file.
+
+    Raises:
+        ValueError: If the file type is not allowed or MIME validation fails.
+    """
     filename = secure_filename(file_storage.filename)
     if not allowed_file(filename, allowed_extensions):
         raise ValueError("Invalid file type. Only PDF and Word documents are allowed.")
@@ -59,12 +73,71 @@ def _apply_scoring_to_submission(submission: ResumeSubmission, scoring: dict) ->
     submission.skill_gap = json.dumps(scoring.get("skill_gap", []))
 
 
+def create_pending_submission(
+    resume_path: Path,
+    job: JobPosting,
+    candidate_id: int,
+    candidate_name: str,
+    email: str,
+) -> ResumeSubmission:
+    """Create a submission record in processing state before background scoring."""
+    submission = ResumeSubmission(
+        candidate_name=candidate_name,
+        email=email,
+        file_path=str(resume_path),
+        job_id=job.id,
+        candidate_id=candidate_id,
+        scoring_status="processing",
+        status="pending",
+    )
+    db.session.add(submission)
+    db.session.commit()
+    return submission
+
+
+def score_in_background(app, submission_id: int, file_path: str, job_id: int) -> None:
+    """Run AI scoring in a background thread with app context."""
+    with app.app_context():
+        submission = db.session.get(ResumeSubmission, submission_id)
+        job = db.session.get(JobPosting, job_id)
+        if not submission or not job:
+            return
+        try:
+            process_resume(Path(file_path), job, submission=submission)
+            submission.scoring_status = "scored"
+            db.session.commit()
+        except Exception:
+            submission.scoring_status = "failed"
+            db.session.commit()
+
+
+def start_background_scoring(app, submission: ResumeSubmission, dest: Path, job: JobPosting) -> None:
+    """Launch background thread for resume scoring."""
+    thread = threading.Thread(
+        target=score_in_background,
+        args=(app._get_current_object(), submission.id, str(dest), job.id),
+        daemon=True,
+    )
+    thread.start()
+
+
 def process_resume(
-    resume_path: Path, job: JobPosting
+    resume_path: Path,
+    job: JobPosting,
+    submission: Optional[ResumeSubmission] = None,
 ) -> Tuple[dict, dict, ResumeSubmission]:
-    """
-    Process resume with resume detection layer.
-    Raises ValueError if document is not a valid resume.
+    """Parse and score a resume, updating or creating a submission record.
+
+    Args:
+        resume_path: Absolute path to the uploaded resume.
+        job: Job posting to score against.
+        submission: Optional existing submission to update.
+
+    Returns:
+        Tuple of (parsed_profile, scoring dict, submission).
+
+    Raises:
+        ValueError: If the document is not a valid resume.
     """
     text = extract_text(str(resume_path))
 
@@ -104,26 +177,37 @@ def process_resume(
         }
     ]
 
-    submission = ResumeSubmission(
-        candidate_name="N/A",
-        email="unknown@example.com",
-        file_path=str(resume_path),
-        parsed_summary=parsed_profile,
-        score=scoring["score"],
-        explanation={
-            "scores": scoring,
-            "feedback": feedback,
-        },
-        job_id=job.id,
-        is_resume_valid=True,
-        detection_details=detection_details,
-        feedback_history=feedback_history,
-        explicit_skills=skill_data["explicit_skills"],
-        inferred_skills=skill_data["inferred_skills"],
-        status="pending",
-    )
+    explanation = {
+        "scores": scoring,
+        "feedback": feedback,
+        "skill_match": scoring.get("skill_match", scoring.get("skill_alignment", 0)),
+        "experience_match": scoring.get(
+            "experience_match", scoring.get("experience_bonus", 0)
+        ),
+        "keyword_match": scoring.get("keyword_match", 0),
+        "rationale": scoring.get("rationale", []),
+    }
+
+    if submission is None:
+        submission = ResumeSubmission(
+            candidate_name="N/A",
+            email="unknown@example.com",
+            file_path=str(resume_path),
+            job_id=job.id,
+            scoring_status="scored",
+            status="pending",
+        )
+        db.session.add(submission)
+
+    submission.file_path = str(resume_path)
+    submission.parsed_summary = parsed_profile
+    submission.explanation = explanation
+    submission.is_resume_valid = True
+    submission.detection_details = detection_details
+    submission.feedback_history = feedback_history
+    submission.explicit_skills = skill_data["explicit_skills"]
+    submission.inferred_skills = skill_data["inferred_skills"]
     _apply_scoring_to_submission(submission, scoring)
-    db.session.add(submission)
     db.session.commit()
     return parsed_profile, scoring, submission
 
@@ -144,6 +228,16 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
     scoring = score_candidate(parsed_profile, job_payload)
     feedback = generate_feedback(parsed_profile, job_payload)
     submission.parsed_summary = parsed_profile
-    submission.explanation = {"scores": scoring, "feedback": feedback}
+    submission.explanation = {
+        "scores": scoring,
+        "feedback": feedback,
+        "skill_match": scoring.get("skill_match", scoring.get("skill_alignment", 0)),
+        "experience_match": scoring.get(
+            "experience_match", scoring.get("experience_bonus", 0)
+        ),
+        "keyword_match": scoring.get("keyword_match", 0),
+        "rationale": scoring.get("rationale", []),
+    }
     _apply_scoring_to_submission(submission, scoring)
+    submission.scoring_status = "scored"
     return scoring

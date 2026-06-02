@@ -73,12 +73,12 @@
   <nav class="sidebar">
     <div class="sidebar-logo">✦ AI Recruit</div>
     <ul class="sidebar-nav">
-      <li><a href="{{ url_for('recruiter_dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
-      <li><a href="{{ url_for('create_job') }}" class="{{ 'active' if not editing else '' }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
-      <li><a href="{{ url_for('recruiter_dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
-      <li><a href="{{ url_for('recruiter_analytics') }}"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
+      <li><a href="{{ url_for('recruiter.dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
+      <li><a href="{{ url_for('recruiter.create_job') }}" class="{{ 'active' if not editing else '' }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
+      <li><a href="{{ url_for('recruiter.dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
+      <li><a href="{{ url_for('recruiter.analytics') }}"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
     </ul>
-    <a href="{{ url_for('logout') }}" style="display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;text-decoration:none;font-size:.9rem;margin-top:auto;transition:all .3s;">
+    <a href="{{ url_for('auth.logout') }}" style="display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;text-decoration:none;font-size:.9rem;margin-top:auto;transition:all .3s;">
       <i class="fa-solid fa-right-from-bracket"></i>Logout
     </a>
   </nav>
@@ -99,7 +99,7 @@
 
       <!-- Form Card -->
       <div class="glass-card" style="padding:2rem;">
-        <form method="POST" action="{{ url_for('edit_job', job_id=job.id) if editing else url_for('create_job') }}">
+        <form method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.id) if editing else url_for('recruiter.create_job') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <!-- Title -->
@@ -163,6 +163,13 @@
             <div class="skills-hint">Comma-separated. These are used directly by the AI scorer.</div>
           </div>
 
+          <!-- Expiry -->
+          <div class="form-group">
+            <label class="form-label">Expires At (optional)</label>
+            <input type="date" name="expires_at" class="form-input"
+              value="{{ job.expires_at.strftime('%Y-%m-%d') if editing and job.expires_at else '' }}">
+          </div>
+
           <!-- Description -->
           <div class="form-group">
             <label class="form-label">Job Description *</label>
@@ -176,7 +183,7 @@
             <button type="submit" class="btn-primary-custom" style="padding:.75rem 2rem;font-size:.95rem;">
               {{ '💾 Save Changes' if editing else '🚀 Post Job' }}
             </button>
-            <a href="{{ url_for('recruiter_dashboard') }}" class="btn-outline-custom" style="padding:.75rem 1.5rem;font-size:.95rem;text-decoration:none;">
+            <a href="{{ url_for('recruiter.dashboard') }}" class="btn-outline-custom" style="padding:.75rem 1.5rem;font-size:.95rem;text-decoration:none;">
               Cancel
             </a>
           </div>

@@ -30,11 +30,12 @@
     <nav class="sidebar">
       <div class="sidebar-logo">✦ AI Recruit</div>
       <ul class="sidebar-nav">
-        <li><a href="{{ url_for('candidate_dashboard') }}" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('candidate.dashboard') }}" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('candidate.profile') }}"><i class="fa-solid fa-user"></i> My Profile</a></li>
         <li><a href="#jobs-section"><i class="fa-solid fa-search"></i> Find Jobs</a></li>
         <li><a href="#my-apps"><i class="fa-solid fa-file-lines"></i> My Applications</a></li>
       </ul>
-      <a href="{{ url_for('logout') }}" style="display:flex;align-items:center;gap:0.75rem;color:#EF4444;padding:0.7rem 0.9rem;border-radius:var(--radius);text-decoration:none;font-size:0.9rem;margin-top:auto;">
+      <a href="{{ url_for('auth.logout') }}" style="display:flex;align-items:center;gap:0.75rem;color:#EF4444;padding:0.7rem 0.9rem;border-radius:var(--radius);text-decoration:none;font-size:0.9rem;margin-top:auto;">
         <i class="fa-solid fa-right-from-bracket"></i> Logout
       </a>
     </nav>
@@ -52,22 +53,32 @@
         <h2 style="font-size:1.1rem;font-weight:600;margin:0 0 1rem;">My Applications</h2>
         {% if submissions %}
           {% for sub in submissions %}
-            {% if sub.score is not none %}
-            {% set pct = percentiles.get(sub.id, 0) %}
-            {% set top_pct = [100 - pct, 1]|max %}
-            <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-lg);padding:1rem 1.5rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
-              <div>
-                <div style="font-weight:600;font-size:0.95rem;">{{ sub.job.title }}</div>
-                <div style="color:var(--text-muted);font-size:0.85rem;">{{ sub.job.company_name or 'Company not listed' }}</div>
-                <div style="color:#A78BFA;font-size:0.8rem;margin-top:0.35rem;">Top {{ top_pct }}% for this role</div>
+            <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-lg);padding:1rem 1.5rem;margin-bottom:1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+                <div>
+                  <div style="font-weight:600;font-size:0.95rem;">{{ sub.job.title if sub.job else 'Application' }}</div>
+                  <div style="color:var(--text-muted);font-size:0.85rem;">{{ sub.job.company_name or 'Company not listed' if sub.job else '' }}</div>
+                  {% if sub.score is not none %}
+                  {% set pct = percentiles.get(sub.id, 0) %}
+                  {% set top_pct = [100 - pct, 1]|max %}
+                  <div style="color:#A78BFA;font-size:0.8rem;margin-top:0.35rem;">Top {{ top_pct }}% for this role</div>
+                  {% endif %}
+                </div>
+                <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                  {% if sub.scoring_status == 'processing' %}
+                  <span id="score-badge-{{ sub.id }}" class="status-badge status-under_review">⏳ Scoring in progress...</span>
+                  {% elif sub.score is not none %}
+                  {% set score = sub.score or 0 %}
+                  <span id="score-badge-{{ sub.id }}" class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ score }}/100</span>
+                  {% endif %}
+                  <span class="status-badge status-{{ sub.status or 'pending' }}">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
+                  <button type="button" class="btn-outline-custom" style="padding:0.35rem 0.75rem;font-size:0.8rem;" data-bs-toggle="collapse" data-bs-target="#fb-{{ sub.id }}">View Feedback</button>
+                </div>
               </div>
-              <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
-                {% set score = sub.score or 0 %}
-                <span class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ score }}/100</span>
-                <span class="status-badge status-{{ sub.status or 'pending' }}">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
+              <div class="collapse mt-2" id="fb-{{ sub.id }}">
+                {% include '_score_breakdown.html' %}
               </div>
             </div>
-            {% endif %}
           {% endfor %}
         {% else %}
           <p style="color:var(--text-muted);">No applications yet. Apply to a job below to get your match score.</p>
@@ -76,7 +87,7 @@
 
       <section id="jobs-section" class="glass-card" style="padding:1.5rem;margin-bottom:2rem;">
         <h2 style="font-size:1.1rem;font-weight:600;margin:0 0 1rem;">Find Jobs</h2>
-        <form method="GET" action="{{ url_for('search_jobs') }}" style="margin-bottom:1.5rem;">
+        <form method="GET" action="{{ url_for('candidate.dashboard') }}" style="margin-bottom:1.5rem;">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
             <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search title, skills, company..."
               style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:0.65rem 1rem;color:var(--text);font-size:0.9rem;outline:none;" />
@@ -96,7 +107,7 @@
           </div>
           <div style="margin-top:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
             <button type="submit" class="btn-primary-custom">Search</button>
-            <a href="{{ url_for('candidate_dashboard') }}" class="btn-outline-custom">Reset</a>
+            <a href="{{ url_for('candidate.dashboard') }}" class="btn-outline-custom">Reset</a>
           </div>
         </form>
 
@@ -107,7 +118,7 @@
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.75rem;">
               <div>
                 <h3 style="margin:0 0 0.35rem;font-size:1.05rem;">
-                  <a href="{{ url_for('job_details', job_id=job.id) }}" style="color:var(--primary-light);text-decoration:none;">{{ job.title }}</a>
+                  <a href="{{ url_for('candidate.job_details', job_id=job.id) }}" style="color:var(--primary-light);text-decoration:none;">{{ job.title }}</a>
                 </h3>
                 <p style="margin:0;color:var(--text-muted);font-size:0.85rem;">
                   {% if job.company_name %}{{ job.company_name }}{% endif %}
@@ -129,7 +140,7 @@
               {% endfor %}
             </div>
 
-            <form action="{{ url_for('upload_resume', job_id=job.id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ url_for('candidate.upload_resume', job_id=job.id) }}" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:1rem;">
                 <input type="text" name="name" placeholder="Your name" required
@@ -151,6 +162,19 @@
         </div>
         {% else %}
           <p style="color:var(--text-muted);text-align:center;padding:2rem 0;">No jobs match your search. Try different filters.</p>
+        {% endif %}
+        {% if jobs_pagination and jobs_pagination.pages > 1 %}
+        <nav class="mt-3">
+          <ul class="pagination justify-content-center">
+            <li class="page-item {% if not jobs_pagination.has_prev %}disabled{% endif %}">
+              <a class="page-link" href="?page={{ jobs_pagination.prev_num }}&q={{ search_query }}&job_type={{ selected_job_type }}&work_mode={{ selected_work_mode }}">Previous</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link">{{ jobs_pagination.page }} / {{ jobs_pagination.pages }}</span></li>
+            <li class="page-item {% if not jobs_pagination.has_next %}disabled{% endif %}">
+              <a class="page-link" href="?page={{ jobs_pagination.next_num }}&q={{ search_query }}&job_type={{ selected_job_type }}&work_mode={{ selected_work_mode }}">Next</a>
+            </li>
+          </ul>
+        </nav>
         {% endif %}
       </section>
 
@@ -233,6 +257,28 @@
     }
     initMobileNav();
     window.addEventListener('resize', initMobileNav);
+
+    const processingIds = [{% for sub in submissions if sub.scoring_status == 'processing' %}{{ sub.id }}{% if not loop.last %},{% endif %}{% endfor %}];
+    function pollScores() {
+      processingIds.forEach(id => {
+        fetch('/api/submission/' + id + '/status')
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'scored' && data.score != null) {
+              const el = document.getElementById('score-badge-' + id);
+              if (el) {
+                el.className = 'score-badge score-medium';
+                el.textContent = 'Score: ' + Number(data.score).toFixed(1) + '/100';
+              }
+            }
+          })
+          .catch(() => {});
+      });
+    }
+    if (processingIds.length) {
+      setInterval(pollScores, 3000);
+    }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -82,7 +82,7 @@
         <h1 style="font-size:1.35rem;font-weight:700;margin:0 0 0.25rem;text-align:center;">Create Account</h1>
         <p style="text-align:center;color:#64748B;font-size:0.85rem;margin:0 0 1.5rem;">Get started in under a minute</p>
 
-        <form method="POST" action="{{ url_for('signup') }}" id="signupForm" novalidate>
+        <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm" novalidate>
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
           <div class="float-label-wrap" style="position:relative;margin-bottom:1.25rem;">
@@ -92,13 +92,18 @@
           </div>
 
           <div style="position:relative;margin-bottom:0.5rem;" class="float-label-wrap">
-            <input type="password" name="password" id="signupPassword" required placeholder=" " class="fl-input" minlength="6"
+            <input type="password" name="password" id="signupPassword" required placeholder=" " class="fl-input" minlength="8"
               style="width:100%;padding:1rem 1rem 0.4rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);color:#F8FAFC;font-size:0.95rem;outline:none;" autocomplete="new-password" />
             <label for="signupPassword">Password</label>
           </div>
-          <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:999px;margin-bottom:1.25rem;overflow:hidden;">
+          <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:999px;margin-bottom:0.75rem;overflow:hidden;">
             <div id="strengthBar" style="height:100%;width:0;background:transparent;border-radius:999px;transition:all 0.3s;"></div>
           </div>
+          <ul id="pwdChecklist" style="list-style:none;padding:0;margin:0 0 1.25rem;font-size:0.8rem;color:#64748B;">
+            <li id="req-len">○ At least 8 characters</li>
+            <li id="req-upper">○ One uppercase letter</li>
+            <li id="req-num">○ One number</li>
+          </ul>
 
           <div class="float-label-wrap" style="position:relative;margin-bottom:1.5rem;">
             <input type="password" name="confirm_password" id="signupConfirm" required placeholder=" " class="fl-input"
@@ -126,7 +131,7 @@
         </form>
 
         <p style="text-align:center;margin-top:1.25rem;color:#64748B;font-size:0.85rem;">
-          Already have an account? <a href="{{ url_for('login') }}" style="color:#A78BFA;text-decoration:none;">Sign in</a>
+          Already have an account? <a href="{{ url_for('auth.login') }}" style="color:#A78BFA;text-decoration:none;">Sign in</a>
         </p>
         <p style="text-align:center;margin-top:1rem;">
           <button type="button" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
@@ -138,17 +143,25 @@
   <script>
     document.getElementById('signupPassword').addEventListener('input', function() {
       const val = this.value;
-      const strength = [
-        val.length >= 8,
-        /[A-Z]/.test(val),
-        /[0-9]/.test(val),
-        /[^A-Za-z0-9]/.test(val)
-      ].filter(Boolean).length;
+      const checks = [
+        { id: 'req-len', ok: val.length >= 8 },
+        { id: 'req-upper', ok: /[A-Z]/.test(val) },
+        { id: 'req-num', ok: /[0-9]/.test(val) },
+      ];
+      const labels = { 'req-len': 'At least 8 characters', 'req-upper': 'One uppercase letter', 'req-num': 'One number' };
+      checks.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (el) {
+          el.style.color = c.ok ? '#34D399' : '#64748B';
+          el.textContent = (c.ok ? '✓ ' : '○ ') + labels[c.id];
+        }
+      });
+      const passed = checks.filter(c => c.ok).length;
       const bar = document.getElementById('strengthBar');
-      const colors = ['#EF4444', '#F59E0B', '#10B981', '#10B981'];
-      const widths = ['25%', '50%', '75%', '100%'];
-      bar.style.width = val.length ? (widths[strength - 1] || '10%') : '0';
-      bar.style.background = val.length ? (colors[strength - 1] || '#EF4444') : 'transparent';
+      const colors = ['#EF4444', '#F59E0B', '#10B981'];
+      const widths = ['33%', '66%', '100%'];
+      bar.style.width = val.length ? (widths[passed - 1] || '10%') : '0';
+      bar.style.background = val.length ? (colors[passed - 1] || '#EF4444') : 'transparent';
     });
 
     function selectRoleCard(role) {

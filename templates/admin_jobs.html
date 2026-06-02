@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Admin — Jobs{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <h1 class="mb-4">All Jobs <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-link">Back</a></h1>
+  <table class="table table-striped">
+    <thead><tr><th>Title</th><th>Company</th><th>Recruiter ID</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+      {% for job in jobs.items %}
+      <tr>
+        <td>{{ job.title }}</td>
+        <td>{{ job.company_name or '—' }}</td>
+        <td>{{ job.recruiter_id }}</td>
+        <td>{{ 'Yes' if job.is_active else 'No' }}</td>
+        <td>
+          {% if job.is_active %}
+          <form method="POST" action="{{ url_for('admin.remove_job', job_id=job.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-warning">Remove</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% set pagination = jobs %}
+  {% include '_pagination.html' %}
+</div>
+{% endblock %}

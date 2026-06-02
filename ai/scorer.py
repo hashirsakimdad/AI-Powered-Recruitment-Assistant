@@ -183,6 +183,10 @@ def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str
     semantic = float(result["semantic_score"])
     experience = float(result["experience_score"])
 
+    skill_match = round(keyword / 40 * 100, 2) if keyword else 0.0
+    experience_match = round(experience / 15 * 100, 2) if experience else 0.0
+    keyword_match = round(semantic / 35 * 100, 2) if semantic else 0.0
+
     return {
         "score": result["score"],
         "keyword_score": keyword,
@@ -190,8 +194,11 @@ def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str
         "experience_score": experience,
         "format_score": result["format_score"],
         "skill_gap": result.get("skill_gap", []),
-        "skill_alignment": round(keyword / 40 * 100, 2) if keyword else 0.0,
-        "experience_bonus": round(experience / 15 * 100, 2) if experience else 0.0,
+        "skill_alignment": skill_match,
+        "experience_bonus": experience_match,
+        "skill_match": skill_match,
+        "experience_match": experience_match,
+        "keyword_match": keyword_match,
         "rationale": _build_rationale(keyword, experience, semantic),
         "method": "weighted_v2",
         "breakdown_note": result.get("breakdown_note", ""),

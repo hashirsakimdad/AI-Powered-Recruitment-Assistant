@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <h1 class="mb-2">My Profile</h1>
+  <p class="text-secondary mb-4">{{ user.email }} · Member since {{ user.created_at.strftime('%B %Y') if user.created_at else '—' }}</p>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card p-3"><div class="small text-muted">Applications</div><div class="fs-4">{{ total_applications }}</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="small text-muted">Average score</div><div class="fs-4">{{ average_score }}/100</div></div></div>
+  </div>
+  <h2 class="h5 mb-3">My submissions</h2>
+  {% for sub in submissions %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap gap-2">
+        <div>
+          <strong>{{ sub.job.title if sub.job else 'Job' }}</strong>
+          <div class="text-muted small">{{ sub.job.company_name if sub.job else '' }} · {{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '' }}</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          {% if sub.scoring_status == 'processing' %}
+          <span class="badge bg-warning text-dark">⏳ Scoring in progress...</span>
+          {% elif sub.score is not none %}
+          <span class="badge bg-primary">{{ sub.score|round(1) }}/100</span>
+          {% endif %}
+          <span class="badge bg-secondary">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-outline-info mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#feedback-{{ sub.id }}">View Feedback</button>
+      <div class="collapse mt-2" id="feedback-{{ sub.id }}">
+        {% set expl = sub.explanation or {} %}
+        {% set scores = expl.get('scores', {}) if expl is mapping else {} %}
+        <div class="progress mb-2" style="height: 8px;">
+          <div class="progress-bar" style="width: {{ sub.score or 0 }}%"></div>
+        </div>
+        <table class="table table-sm table-bordered">
+          <tr><th>Skill Match</th><td>{{ expl.get('skill_match', scores.get('skill_match', '—')) }}%</td></tr>
+          <tr><th>Experience Match</th><td>{{ expl.get('experience_match', scores.get('experience_match', '—')) }}%</td></tr>
+          <tr><th>Keyword Match</th><td>{{ expl.get('keyword_match', scores.get('keyword_match', '—')) }}%</td></tr>
+        </table>
+        {% if expl.get('rationale') or scores.get('rationale') %}
+        <ul class="small">{% for r in (expl.get('rationale') or scores.get('rationale', [])) %}<li>{{ r }}</li>{% endfor %}</ul>
+        {% endif %}
+        {% set gaps = (sub.skill_gap or '[]') %}
+        {% if gaps and gaps != '[]' %}
+        <p class="small mb-0"><strong>You're missing:</strong> {{ gaps }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">No applications yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

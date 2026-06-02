@@ -6,7 +6,7 @@
     <div class="col-lg-10">
       <!-- Back Button -->
       <div class="mb-4">
-        <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-outline-secondary">
           <i class="bi bi-arrow-left me-1"></i>Back to Jobs
         </a>
       </div>
@@ -133,7 +133,8 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ url_for('upload_resume', job_id=job.id) }}" method="POST" enctype="multipart/form-data" id="applyForm">
+        <form action="{{ url_for('candidate.upload_resume', job_id=job.id) }}" method="POST" enctype="multipart/form-data" id="applyForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <div class="mb-3">
             <label class="form-label">Full Name</label>
             <input type="text" name="name" class="form-control" placeholder="John Doe" required />

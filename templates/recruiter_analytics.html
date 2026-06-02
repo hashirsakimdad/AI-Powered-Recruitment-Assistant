@@ -72,12 +72,12 @@
   <nav class="sidebar">
     <div class="sidebar-logo">✦ AI Recruit</div>
     <ul class="sidebar-nav">
-      <li><a href="{{ url_for('recruiter_dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
-      <li><a href="{{ url_for('create_job') }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
-      <li><a href="{{ url_for('recruiter_dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
-      <li><a href="{{ url_for('recruiter_analytics') }}" class="active"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
+      <li><a href="{{ url_for('recruiter.dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
+      <li><a href="{{ url_for('recruiter.create_job') }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
+      <li><a href="{{ url_for('recruiter.dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
+      <li><a href="{{ url_for('recruiter.analytics') }}" class="active"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
     </ul>
-    <a href="{{ url_for('logout') }}" style="display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;text-decoration:none;font-size:.9rem;margin-top:auto;transition:all .3s;">
+    <a href="{{ url_for('auth.logout') }}" style="display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;text-decoration:none;font-size:.9rem;margin-top:auto;transition:all .3s;">
       <i class="fa-solid fa-right-from-bracket"></i>Logout
     </a>
   </nav>
@@ -92,7 +92,7 @@
           {{ submissions|length }} total applications across {{ jobs|length }} jobs
         </p>
       </div>
-      <a href="{{ url_for('recruiter_dashboard') }}" style="display:inline-flex;align-items:center;gap:.5rem;
+      <a href="{{ url_for('recruiter.dashboard') }}" style="display:inline-flex;align-items:center;gap:.5rem;
         background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#94A3B8;
         padding:.55rem 1.1rem;border-radius:10px;text-decoration:none;font-size:.85rem;transition:all .2s;"
         onmouseover="this.style.color='#F8FAFC'" onmouseout="this.style.color='#94A3B8'">

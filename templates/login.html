@@ -92,7 +92,7 @@
             style="flex:1; padding:0.55rem; border:none; background:transparent; color:#94A3B8; border-radius:8px; cursor:pointer; font-size:0.9rem; transition:all 0.2s;">👤 Candidate</button>
         </nav>
 
-        <form method="POST" action="/login" id="loginForm">
+        <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
           <p class="float-label-wrap" style="position:relative; margin-bottom:1.25rem;">
@@ -119,7 +119,7 @@
 
           <p style="text-align:center; margin-top:1.25rem; color:#475569; font-size:0.85rem;">
             Don't have an account?
-            <a href="/signup" style="color:#A78BFA; text-decoration:none;">Sign up free</a>
+            <a href="{{ url_for('auth.signup') }}" style="color:#A78BFA; text-decoration:none;">Sign up free</a>
           </p>
         </form>
 

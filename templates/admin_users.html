@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Admin — Users{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <h1 class="mb-4">Users <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-link">Back</a></h1>
+  <table class="table table-striped">
+    <thead><tr><th>Email</th><th>Role</th><th>Joined</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+      {% for user in users.items %}
+      <tr>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '—' }}</td>
+        <td>{{ 'Yes' if user.is_active else 'No' }}</td>
+        <td>
+          {% if user.is_active %}
+          <form method="POST" action="{{ url_for('admin.deactivate_user', user_id=user.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% set pagination = users %}
+  {% include '_pagination.html' %}
+</div>
+{% endblock %}

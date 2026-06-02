@@ -1,0 +1,13 @@
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Page navigation" class="mt-3">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="{{ request.path }}?{{ request.args.to_dict() | dictsort | map('join', '=') | join('&') }}&page={{ pagination.prev_num if pagination.has_prev else 1 }}">Previous</a>
+    </li>
+    <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ pagination.next_num if pagination.has_next else pagination.pages }}{% for k,v in request.args.items() %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Next</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
