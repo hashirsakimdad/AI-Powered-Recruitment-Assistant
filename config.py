@@ -35,7 +35,11 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 3600
 
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
+    _raw_mail_port = os.getenv("MAIL_PORT", "587")
+    try:
+        MAIL_PORT = int(_raw_mail_port)
+    except (TypeError, ValueError):
+        MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")

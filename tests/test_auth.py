@@ -20,14 +20,14 @@ def test_login_invalid_password(client):
     assert b"Invalid credentials" in resp.data
 
 
-def test_login_rate_limit(client, app):
-    app.config["RATELIMIT_ENABLED"] = True
+def test_login_rate_limit(rate_limit_client):
+    # Login route limit is 10 per minute (see auth.login decorator).
     for _ in range(10):
-        client.post(
+        rate_limit_client.post(
             "/login",
             data={"email": "recruiter@example.com", "password": "wrong"},
         )
-    resp = client.post(
+    resp = rate_limit_client.post(
         "/login",
         data={"email": "recruiter@example.com", "password": "wrong"},
     )

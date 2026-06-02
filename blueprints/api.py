@@ -8,6 +8,13 @@ from models import JobPosting, ResumeSubmission, db
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
+def _parse_skill_gap(raw: str | None) -> list:
+    try:
+        return json.loads(raw or "[]")
+    except json.JSONDecodeError:
+        return []
+
+
 @api_bp.route("/job/<int:job_id>/submissions")
 @role_required("recruiter")
 def api_submissions(job_id):
@@ -73,7 +80,7 @@ def submission_breakdown(submission_id):
             "semantic_score": sub.semantic_score,
             "experience_score": sub.experience_score,
             "format_score": sub.format_score,
-            "skill_gap": json.loads(sub.skill_gap or "[]"),
+            "skill_gap": _parse_skill_gap(sub.skill_gap),
             "skill_match": explanation.get("skill_match", scores.get("skill_match")),
             "experience_match": explanation.get(
                 "experience_match", scores.get("experience_match")

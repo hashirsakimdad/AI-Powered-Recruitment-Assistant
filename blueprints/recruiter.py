@@ -1,8 +1,9 @@
+import csv
 import json
+import threading
 from collections import Counter
 from datetime import datetime
 from io import BytesIO, StringIO
-import csv
 
 from flask import (
     Blueprint,
@@ -19,12 +20,11 @@ from flask import (
 )
 from sqlalchemy import desc, nullslast
 
-from app_helpers import clean_text
+from app_helpers import clean_text, sanitize_csv_cell
 from blueprints.auth_utils import role_required
-from extensions import limiter
 from models import JobPosting, ResumeSubmission, db
 from services.email_service import notify_candidate
-from services.resume_service import rescore_submission
+from services.resume_service import rescore_in_background
 
 recruiter_bp = Blueprint("recruiter", __name__, url_prefix="/recruiter")
 
@@ -67,7 +67,10 @@ def analytics():
     apps_per_job = {j.title: len(j.submissions) for j in jobs}
     skill_gaps = Counter()
     for sub in submissions:
-        gaps = json.loads(sub.skill_gap or "[]")
+        try:
+            gaps = json.loads(sub.skill_gap or "[]")
+        except json.JSONDecodeError:
+            continue
         skill_gaps.update(gaps)
     top_gaps = skill_gaps.most_common(8)
     return render_template(
@@ -140,13 +143,17 @@ def edit_job(job_id):
                 flash("Invalid expiry date", "danger")
                 return render_template("job_form.html", job=job, editing=True)
         db.session.commit()
-        for sub in job.submissions:
-            try:
-                rescore_submission(sub, job)
-            except Exception as exc:
-                print(f"Re-score failed for submission {sub.id}: {exc}")
+        app_obj = current_app._get_current_object()
+        for sub in list(job.submissions):
+            sub.scoring_status = "processing"
         db.session.commit()
-        flash("Job updated and all candidates re-scored.", "success")
+        for sub in list(job.submissions):
+            threading.Thread(
+                target=rescore_in_background,
+                args=(app_obj, sub.id, job.id),
+                daemon=True,
+            ).start()
+        flash("Job updated. Re-scoring candidates in the background.", "success")
         return redirect(url_for("recruiter.dashboard"))
     return render_template("job_form.html", job=job, editing=True)
 
@@ -178,8 +185,8 @@ def download_report(job_id):
     for sub in job.submissions:
         rows.append(
             [
-                sub.candidate_name,
-                sub.email,
+                sanitize_csv_cell(sub.candidate_name),
+                sanitize_csv_cell(sub.email),
                 sub.score,
                 sub.created_at.isoformat() if sub.created_at else "",
             ]

@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from werkzeug.utils import secure_filename
 
@@ -107,6 +110,31 @@ def score_in_background(app, submission_id: int, file_path: str, job_id: int) ->
             submission.scoring_status = "scored"
             db.session.commit()
         except Exception:
+            logger.exception(
+                "Background scoring failed for submission_id=%s job_id=%s",
+                submission_id,
+                job_id,
+            )
+            submission.scoring_status = "failed"
+            db.session.commit()
+
+
+def rescore_in_background(app, submission_id: int, job_id: int) -> None:
+    """Re-score a submission in a background thread."""
+    with app.app_context():
+        submission = db.session.get(ResumeSubmission, submission_id)
+        job = db.session.get(JobPosting, job_id)
+        if not submission or not job:
+            return
+        try:
+            rescore_submission(submission, job)
+            db.session.commit()
+        except Exception:
+            logger.exception(
+                "Background re-score failed for submission_id=%s job_id=%s",
+                submission_id,
+                job_id,
+            )
             submission.scoring_status = "failed"
             db.session.commit()
 
@@ -189,15 +217,14 @@ def process_resume(
     }
 
     if submission is None:
-        submission = ResumeSubmission(
-            candidate_name="N/A",
-            email="unknown@example.com",
-            file_path=str(resume_path),
-            job_id=job.id,
-            scoring_status="scored",
-            status="pending",
+        logger.warning(
+            "process_resume called without submission for job_id=%s path=%s",
+            job.id,
+            resume_path,
         )
-        db.session.add(submission)
+        raise ValueError(
+            "A submission record is required before scoring; use create_pending_submission first."
+        )
 
     submission.file_path = str(resume_path)
     submission.parsed_summary = parsed_profile

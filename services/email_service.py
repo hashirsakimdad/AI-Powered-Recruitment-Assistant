@@ -1,3 +1,4 @@
+import logging
 from threading import Thread
 
 from flask import current_app
@@ -5,10 +6,15 @@ from flask_mail import Message
 
 from extensions import mail
 
+logger = logging.getLogger(__name__)
+
 
 def send_status_email_async(app, msg: Message) -> None:
     with app.app_context():
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except Exception:
+            logger.exception("Failed to send status email to %s", msg.recipients)
 
 
 def notify_candidate(app, submission, new_status: str) -> None:

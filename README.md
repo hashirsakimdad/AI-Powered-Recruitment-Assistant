@@ -16,21 +16,31 @@ Production-ready Flask application for AI-assisted hiring: recruiters post jobs 
 
 ## Setup
 
-1. Clone the repository and create a virtual environment.
-2. Install dependencies:
+1. **Install system dependencies for OCR/PDF processing** (required by `pytesseract` and `pdf2image` in `requirements.txt`):
+   - **Ubuntu/Debian:** `sudo apt install tesseract-ocr poppler-utils`
+   - **macOS:** `brew install tesseract poppler`
+   - **Windows:** Install [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) and [Poppler](https://github.com/oschwartz10612/poppler-windows/releases/) binaries and add them to `PATH`
+
+2. Clone the repository and create a virtual environment.
+
+3. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Copy environment template and edit values:
+
+4. Copy environment template and edit values:
    ```bash
-   copy .env.example .env
+   cp .env.example .env
    ```
-4. Initialize the database:
+   (Windows: `copy .env.example .env`)
+
+5. Initialize the database:
    ```bash
    flask db upgrade
    ```
-   If migrations are not set up yet, the app also runs `db.create_all()` on startup for SQLite.
-5. Run the development server:
+   `flask db upgrade` is the standard way to apply migrations. For **SQLite only**, if the `migrations/` folder is missing, the app will call `db.create_all()` on startup to create tables automatically. Migrations are still **recommended** and **required** for production or any non-SQLite database (PostgreSQL, MySQL).
+
+6. Run the development server:
    ```bash
    flask run
    ```

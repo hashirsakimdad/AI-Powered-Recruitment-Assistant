@@ -1,9 +1,12 @@
 import json
+import logging
 
 import bleach
-from sqlalchemy import desc, inspect, nullslast, text
+from sqlalchemy import inspect, text
 
 from models import ResumeSubmission, db
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_TAGS = []
 
@@ -12,6 +15,16 @@ def clean_text(value) -> str:
     if value is None:
         return ""
     return bleach.clean(str(value).strip(), tags=ALLOWED_TAGS, strip=True)
+
+
+def sanitize_csv_cell(value) -> str:
+    """Prevent CSV formula injection in exported cells."""
+    if value is None:
+        return ""
+    s = str(value)
+    if s and s[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + s
+    return s
 
 
 def ensure_breakdown_columns():
@@ -28,8 +41,6 @@ def ensure_breakdown_columns():
             ("format_score", "FLOAT DEFAULT 0.0"),
             ("skill_gap", "TEXT DEFAULT ''"),
             ("scoring_status", "VARCHAR(20) DEFAULT 'scored'"),
-            ("expires_at", "DATETIME"),
-            ("is_active", "BOOLEAN DEFAULT 1"),
         ]
         user_cols = {c["name"] for c in insp.get_columns("users")} if "users" in insp.get_table_names() else set()
         if "is_active" not in user_cols and "users" in insp.get_table_names():
@@ -51,6 +62,8 @@ def ensure_breakdown_columns():
         db.session.commit()
     except Exception:
         db.session.rollback()
+        logger.exception("ensure_breakdown_columns failed")
+        raise
 
 
 def get_score_percentile(submission_id: int, job_id: int) -> int:

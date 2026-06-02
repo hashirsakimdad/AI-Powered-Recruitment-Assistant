@@ -1,4 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from sqlalchemy.exc import IntegrityError
 
 from app_helpers import clean_text
 from extensions import limiter
@@ -15,10 +16,11 @@ def login():
         email = clean_text(request.form.get("email"))
         password = request.form.get("password") or ""
         user = User.query.filter_by(email=email).first()
-        if user and not user.is_active:
-            flash("Account deactivated", "danger")
-            return render_template("login.html")
         if user and user.check_password(password):
+            if not user.is_active:
+                flash("Invalid credentials", "danger")
+                return render_template("login.html")
+            session.clear()
             session.permanent = True
             session["user_id"] = user.id
             session["role"] = user.role
@@ -65,7 +67,12 @@ def signup():
         user = User(email=email, role=role)
         user.set_password(password)
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("Email already registered. Please login instead.", "danger")
+            return redirect(url_for("auth.login"))
 
         flash("Account created successfully! Please login.", "success")
         return redirect(url_for("auth.login"))
@@ -73,7 +80,7 @@ def signup():
     return render_template("signup.html")
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     flash("Logged out", "info")

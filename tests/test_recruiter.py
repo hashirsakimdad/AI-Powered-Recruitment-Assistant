@@ -48,7 +48,7 @@ def test_recruiter_cannot_see_other_recruiter_jobs(app, client):
     assert resp.status_code == 404
 
 
-def test_download_report_unauthorized(app, client):
+def test_recruiter_can_download_own_report_and_not_others(app, client):
     with app.app_context():
         r1 = User(email="ra@test.com", role="recruiter")
         r1.set_password("Password1")
@@ -56,16 +56,23 @@ def test_download_report_unauthorized(app, client):
         r2.set_password("Password1")
         db.session.add_all([r1, r2])
         db.session.commit()
-        job = JobPosting(
-            title="Secret",
+        own_job = JobPosting(
+            title="Mine",
             description="d",
             required_skills="x",
+            recruiter_id=r1.id,
+        )
+        other_job = JobPosting(
+            title="Theirs",
+            description="d",
+            required_skills="y",
             recruiter_id=r2.id,
         )
-        db.session.add(job)
+        db.session.add_all([own_job, other_job])
         db.session.commit()
-        job_id = job.id
+        own_id = own_job.id
+        other_id = other_job.id
 
     client.post("/login", data={"email": "ra@test.com", "password": "Password1"})
-    resp = client.get(f"/recruiter/reports/{job_id}")
-    assert resp.status_code == 404
+    assert client.get(f"/recruiter/reports/{own_id}").status_code == 200
+    assert client.get(f"/recruiter/reports/{other_id}").status_code == 404

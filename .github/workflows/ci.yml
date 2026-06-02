@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest pytest-flask
+        run: pip install -r requirements.txt
       - name: Run tests
         env:
           FLASK_ENV: testing

@@ -1,0 +1,6 @@
+<form method="POST" action="{{ url_for('auth.logout') }}" class="logout-form" style="margin-top:auto;{% if inline %}display:inline;{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <button type="submit" style="{{ button_style|default('background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;text-align:inherit;width:100%;') }}">
+    {% if icon %}<i class="{{ icon }}"></i>{% endif %}{{ label|default('Logout') }}
+  </button>
+</form>

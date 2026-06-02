@@ -45,6 +45,14 @@ def deactivate_user(user_id):
     user = db.session.get(User, user_id)
     if user is None:
         abort(404)
+    if user_id == session.get("user_id"):
+        flash("You cannot deactivate your own account.", "danger")
+        return redirect(url_for("admin.users"))
+    if user.role == "admin" and user.is_active:
+        active_admins = User.query.filter_by(role="admin", is_active=True).count()
+        if active_admins <= 1:
+            flash("Cannot deactivate the last active admin.", "danger")
+            return redirect(url_for("admin.users"))
     user.is_active = False
     db.session.commit()
     flash(f"Deactivated {user.email}", "info")
