@@ -1,0 +1,68 @@
+# .coderabbit.yaml
+# CodeRabbit configuration for AI-Powered Recruitment Assistant
+
+language: "en-US"
+
+reviews:
+  # Auto-review all PRs immediately
+  auto_review:
+    enabled: true
+    drafts: false
+
+  # What CodeRabbit should focus on for this project
+  profile: "assertive"  # strict mode — catch everything
+
+  # Areas to review with high priority
+  path_filters:
+    - "!migrations/**"         # skip auto-generated migration files
+    - "!static/vendor/**"      # skip third-party JS/CSS
+    - "!instance/**"           # skip local dev data
+
+  # Custom instructions for this specific project
+  instructions: |
+    This is a Flask-based AI recruitment platform handling sensitive hiring data.
+
+    CRITICAL — check these in every review:
+
+    1. SECURITY:
+       - Every POST route must have @login_required or @role_required decorator
+       - Every route returning data must verify user owns that data (user isolation)
+       - No raw SQL — SQLAlchemy ORM only
+       - No secrets or credentials hardcoded anywhere
+       - All user inputs must be sanitized with bleach before DB insert
+       - File uploads must validate extension before saving
+
+    2. AUTHORIZATION:
+       - Recruiters can only see/modify their OWN jobs and submissions
+       - Candidates can only see/download their OWN submissions
+       - Admin routes must have @role_required("admin")
+       - API endpoints must check ownership before returning data
+
+    3. AI SCORING:
+       - Scoring must happen in background thread (never block the HTTP request)
+       - Background threads must push Flask app context before DB access
+       - scoring_status must be updated to "failed" on exceptions (never silently fail)
+
+    4. DATABASE:
+       - Use db.session.get(Model, id) — NOT Model.query.get(id) (deprecated)
+       - All new columns need a corresponding Flask-Migrate migration
+       - Foreign key relationships must enforce user isolation at query level
+
+    5. EMAIL:
+       - Email sending must be async (background thread)
+       - Only send emails for: shortlisted, selected, rejected statuses
+       - Never send email if MAIL_USERNAME is not configured
+
+    6. TEMPLATES:
+       - Every <form method="POST"> must have csrf_token
+       - No hardcoded URLs — always use url_for() with blueprint prefix
+       - User-generated content must be escaped (Jinja2 autoescaping must be ON)
+
+    7. TESTS:
+       - Every new route needs at least one test
+       - Every authorization boundary needs a test
+       - Tests must not use production DB — only SQLite in-memory
+
+chat:
+  # Enable @coderabbit mentions in PR comments
+  auto_reply: true
