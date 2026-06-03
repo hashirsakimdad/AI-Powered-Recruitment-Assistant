@@ -9,19 +9,46 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
+
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install dependencies
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install system dependencies (OCR/PDF)
+        run: sudo apt-get install -y tesseract-ocr poppler-utils
+
+      - name: Install Python dependencies
         run: pip install -r requirements.txt
+
       - name: Run tests
         env:
           FLASK_ENV: testing
-          SECRET_KEY: test-secret-key
-          SEED_DEMO_USERS: "true"
-        run: pytest tests/ -v
-      - name: Check for debug=True in production code
-        run: grep -r "debug=True" app.py && exit 1 || exit 0
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          SEED_DEMO_USERS: "false"
+        run: pytest tests/ -v --tb=short
+
+      - name: Check for hardcoded debug=True
+        run: |
+          if grep -rn "debug=True" app.py blueprints/; then
+            echo "ERROR: hardcoded debug=True found in source"
+            exit 1
+          fi
+          echo "OK: No hardcoded debug=True found"
+
+      - name: Check for hardcoded secrets
+        run: |
+          if grep -rn "recruiter123\|candidate123" blueprints/ services/ ai/; then
+            echo "ERROR: Hardcoded demo credentials found in application code"
+            exit 1
+          fi
+          echo "OK: No hardcoded credentials found"

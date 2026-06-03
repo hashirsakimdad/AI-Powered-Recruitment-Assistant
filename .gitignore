@@ -1,22 +1,57 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+instance/
+*.db
+*.sqlite3
+
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# Virtual Environment
-.venv/
+# Virtual environments
 venv/
+.venv/
 env/
+ENV/
 
-# Environment variables
-.env
+# Logs
+instance/logs/
+*.log
+
+# Uploads (user data - never commit)
+instance/uploads/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Migrations (keep the folder but not the compiled cache)
+migrations/__pycache__/
 
 # App runtime / sensitive data
-instance/
 uploads/
 training/
-*.db
 
 # ML / AI files
 *.h5
@@ -26,17 +61,5 @@ training/
 datasets/
 data/
 
-# IDE / Editors
-.vscode/
-.idea/
-
-# OS files
-Thumbs.db
-.DS_Store
-
-migrations/
+# Docs (local only)
 USER_GUIDE.md
-instance/
-__pycache__/
-*.pyc
-.env

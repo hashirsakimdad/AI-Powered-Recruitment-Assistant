@@ -1,5 +1,7 @@
 import json
+import logging
 import os
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
@@ -32,7 +34,8 @@ def create_app(config_overrides=None):
         if request.endpoint == "auth.login":
             flash("Too many login attempts. Please wait a minute.", "danger")
             return render_template("login.html"), 429
-        return render_template("rate_limit.html"), 429
+        flash("Too many requests. Please wait a moment and try again.", "warning")
+        return redirect(request.referrer or url_for("auth.login")), 429
 
     @app.before_request
     def ensure_upload_dir():
@@ -60,29 +63,32 @@ def create_app(config_overrides=None):
 
         return dict(pagination_url=pagination_url)
 
-    @app.route("/")
-    def index():
-        user_id = session.get("user_id")
-        if user_id:
-            user = db.session.get(User, user_id)
-            if not user or not user.is_active:
-                session.clear()
-                return render_template("index.html")
-            role = user.role
-            if role == "recruiter":
-                return redirect(url_for("recruiter.dashboard"))
-            if role == "admin":
-                return redirect(url_for("admin.dashboard"))
-            return redirect(url_for("candidate.dashboard"))
-        return render_template("index.html")
-
     if not app.config.get("TESTING"):
         with app.app_context():
             os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
             os.makedirs(os.path.join(app.root_path, "instance", "uploads"), exist_ok=True)
             db.create_all()
             ensure_breakdown_columns()
-            seed_demo_users(db.session)
+            if app.config.get("SEED_DEMO_USERS", False):
+                seed_demo_users(db.session)
+
+    if not app.debug and not app.config.get("TESTING"):
+        log_dir = os.path.join(os.path.dirname(__file__), "instance", "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        file_handler = RotatingFileHandler(
+            os.path.join(log_dir, "app.log"),
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
+        )
+        file_handler.setFormatter(
+            logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
+        )
+        file_handler.setLevel(logging.WARNING)
+        app.logger.addHandler(file_handler)
+
+    app.logger.setLevel(logging.INFO)
+    app.logger.info("Application startup complete")
+
     return app
 
 

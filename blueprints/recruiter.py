@@ -106,6 +106,7 @@ def create_job():
             company_name=clean_text(request.form.get("company_name", "")),
             location=clean_text(request.form.get("location", "")),
             experience_level=clean_text(request.form.get("experience_level", "")),
+            salary_range=clean_text(request.form.get("salary_range", "")),
             expires_at=expires_at,
             is_active=True,
         )
@@ -135,6 +136,7 @@ def edit_job(job_id):
         job.experience_level = clean_text(
             request.form.get("experience_level", job.experience_level)
         )
+        job.salary_range = clean_text(request.form.get("salary_range", job.salary_range or ""))
         expires_raw = request.form.get("expires_at")
         if expires_raw:
             try:
@@ -252,6 +254,12 @@ def update_candidate_status(submission_id):
 
     submission.status = new_status
     db.session.commit()
+    current_app.logger.info(
+        "Status update: submission_id=%s new_status=%s by_recruiter=%s",
+        submission_id,
+        new_status,
+        session["user_id"],
+    )
     notify_candidate(current_app._get_current_object(), submission, new_status)
 
     return jsonify({"success": True, "status": new_status})

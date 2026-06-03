@@ -45,9 +45,9 @@ def submission_status(submission_id):
 
     return jsonify(
         {
-            "status": sub.scoring_status,
+            "scoring_status": sub.scoring_status,
+            "status": sub.status,
             "score": sub.score,
-            "application_status": sub.status,
         }
     )
 

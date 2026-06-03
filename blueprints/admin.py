@@ -39,24 +39,26 @@ def users():
     return render_template("admin_users.html", users=users_page)
 
 
-@admin_bp.route("/users/<int:user_id>/deactivate", methods=["POST"])
+@admin_bp.route("/users/<int:user_id>/toggle", methods=["POST"])
 @role_required("admin")
-def deactivate_user(user_id):
+def toggle_user(user_id):
     user = db.session.get(User, user_id)
     if user is None:
         abort(404)
-    if user_id == session.get("user_id"):
-        flash("You cannot deactivate your own account.", "danger")
-        return redirect(url_for("admin.users"))
     if user.role == "admin" and user.is_active:
-        active_admins = User.query.filter_by(role="admin", is_active=True).count()
-        if active_admins <= 1:
-            flash("Cannot deactivate the last active admin.", "danger")
-            return redirect(url_for("admin.users"))
-    user.is_active = False
+        flash("Cannot deactivate admin accounts.", "warning")
+        return redirect(url_for("admin.users"))
+    user.is_active = not user.is_active
     db.session.commit()
-    flash(f"Deactivated {user.email}", "info")
+    action = "activated" if user.is_active else "deactivated"
+    flash(f"User {user.email} has been {action}.", "success")
     return redirect(url_for("admin.users"))
+
+
+@admin_bp.route("/users/<int:user_id>/deactivate", methods=["POST"])
+@role_required("admin")
+def deactivate_user(user_id):
+    return toggle_user(user_id)
 
 
 @admin_bp.route("/jobs")
@@ -75,7 +77,7 @@ def remove_job(job_id):
     job = db.session.get(JobPosting, job_id)
     if job is None:
         abort(404)
-    job.is_active = False
+    db.session.delete(job)
     db.session.commit()
-    flash("Job removed from active listings", "info")
+    flash("Job posting removed.", "success")
     return redirect(url_for("admin.jobs"))

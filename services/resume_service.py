@@ -105,15 +105,22 @@ def score_in_background(app, submission_id: int, file_path: str, job_id: int) ->
         job = db.session.get(JobPosting, job_id)
         if not submission or not job:
             return
+        app.logger.info("Scoring started: submission_id=%s", submission_id)
         try:
             process_resume(Path(file_path), job, submission=submission)
             submission.scoring_status = "scored"
+            app.logger.info(
+                "Scoring complete: submission_id=%s score=%s",
+                submission_id,
+                submission.score,
+            )
             db.session.commit()
         except Exception:
-            logger.exception(
-                "Background scoring failed for submission_id=%s job_id=%s",
+            app.logger.error(
+                "Scoring failed: submission_id=%s job_id=%s",
                 submission_id,
                 job_id,
+                exc_info=True,
             )
             submission.scoring_status = "failed"
             db.session.commit()

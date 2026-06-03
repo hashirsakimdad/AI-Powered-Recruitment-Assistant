@@ -54,6 +54,8 @@ def ensure_breakdown_columns():
             db.session.execute(text("ALTER TABLE job_postings ADD COLUMN expires_at DATETIME"))
         if "is_active" not in job_cols and "job_postings" in insp.get_table_names():
             db.session.execute(text("ALTER TABLE job_postings ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+        if "salary_range" not in job_cols and "job_postings" in insp.get_table_names():
+            db.session.execute(text("ALTER TABLE job_postings ADD COLUMN salary_range VARCHAR(80)"))
         for name, col_type in additions:
             if name not in cols:
                 db.session.execute(

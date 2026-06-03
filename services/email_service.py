@@ -22,6 +22,10 @@ def notify_candidate(app, submission, new_status: str) -> None:
     if new_status not in ("shortlisted", "selected", "rejected"):
         return
 
+    with app.app_context():
+        if not current_app.config.get("MAIL_USERNAME"):
+            return
+
     status_messages = {
         "shortlisted": "Congratulations! You've been shortlisted.",
         "selected": "Great news! You've been selected.",

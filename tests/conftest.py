@@ -90,8 +90,16 @@ def candidate_client(client):
 
 
 def create_user(email: str, role: str, password: str = "Password1"):
-    user = User(email=email, role=role)
+    user = User(email=email, role=role, is_active=True)
     user.set_password(password)
     _db.session.add(user)
     _db.session.commit()
     return user
+
+
+def login_as(client, user, password="Test1234!"):
+    return client.post(
+        "/login",
+        data={"email": user.email, "password": password},
+        follow_redirects=True,
+    )

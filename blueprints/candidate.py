@@ -1,3 +1,6 @@
+from datetime import datetime
+from pathlib import Path
+
 from flask import (
     Blueprint,
     abort,
@@ -6,6 +9,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     session,
     url_for,
 )
@@ -59,6 +63,10 @@ def upload_resume(job_id):
     job = db.session.get(JobPosting, job_id)
     if job is None:
         abort(404)
+
+    if not job.is_active or (job.expires_at and job.expires_at < datetime.utcnow()):
+        flash("This job is no longer accepting applications.", "warning")
+        return redirect(url_for("candidate.dashboard"))
 
     user_id = session["user_id"]
     existing = ResumeSubmission.query.filter_by(
@@ -125,4 +133,27 @@ def profile():
         submissions=submissions,
         total_applications=len(submissions),
         average_score=round(avg_score, 1),
+        shortlisted_count=sum(1 for s in submissions if s.status == "shortlisted"),
+        selected_count=sum(1 for s in submissions if s.status == "selected"),
+    )
+
+
+@candidate_bp.route("/submission/<int:submission_id>/download")
+@role_required("candidate")
+def download_resume(submission_id):
+    submission = db.session.get(ResumeSubmission, submission_id)
+    if submission is None:
+        abort(404)
+    if submission.candidate_id != session["user_id"]:
+        abort(403)
+
+    file_path = Path(submission.file_path)
+    if not file_path.exists():
+        flash("Resume file no longer exists on server.", "warning")
+        return redirect(url_for("candidate.profile"))
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=f"resume_{submission.id}{file_path.suffix}",
     )

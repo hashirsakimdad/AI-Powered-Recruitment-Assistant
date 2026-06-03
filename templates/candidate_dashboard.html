@@ -123,6 +123,7 @@
                 <p style="margin:0;color:var(--text-muted);font-size:0.85rem;">
                   {% if job.company_name %}{{ job.company_name }}{% endif %}
                   {% if job.location %} · {{ job.location }}{% endif %}
+                  {% if job.salary_range %} · {{ job.salary_range }}{% endif %}
                 </p>
                 <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem;">
                   {% if job.job_type %}<span class="status-badge status-pending">{{ job.job_type }}</span>{% endif %}
@@ -269,7 +270,7 @@
         fetch('/api/submission/' + id + '/status')
           .then(r => r.json())
           .then(data => {
-            if (data.status === 'scored' && data.score != null) {
+            if (data.scoring_status === 'scored' && data.score != null) {
               const el = document.getElementById('score-badge-' + id);
               if (el) {
                 const score = Number(data.score);

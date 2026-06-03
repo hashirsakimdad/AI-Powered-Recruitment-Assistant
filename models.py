@@ -38,6 +38,7 @@ class JobPosting(db.Model):
     company_name = db.Column(db.String(120), nullable=True)
     location = db.Column(db.String(120), nullable=True)
     experience_level = db.Column(db.String(50), nullable=True)
+    salary_range = db.Column(db.String(80), nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
@@ -92,6 +93,8 @@ class ResumeSubmission(db.Model):
             "is_resume_valid": self.is_resume_valid,
             "scoring_status": self.scoring_status,
             "status": self.status,
+            "inferred_skills": self.inferred_skills,
+            "explicit_skills": self.explicit_skills,
         }
 
 
@@ -109,7 +112,7 @@ def seed_demo_users(db_session) -> None:
     ]
     for email, role, password in demos:
         if not User.query.filter_by(email=email).first():
-            user = User(email=email, role=role)
+            user = User(email=email, role=role, is_active=True)
             user.set_password(password)
             db_session.add(user)
     db_session.commit()
