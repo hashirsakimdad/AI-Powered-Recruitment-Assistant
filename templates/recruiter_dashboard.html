@@ -34,7 +34,7 @@
   <div id="sidebarOverlay" onclick="toggleSidebar()"
     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;" aria-hidden="true"></div>
 
-  <div style="display:flex;min-height:100vh;">
+  <div class="app-layout">
     <nav class="sidebar">
       <div class="sidebar-logo">✦ AI Recruit</div>
       <ul class="sidebar-nav">
@@ -49,6 +49,7 @@
     </nav>
 
     <main class="main-content">
+      <div class="content-inner">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
         <div>
           <h1 style="font-size:1.6rem;font-weight:700;margin:0;">Dashboard</h1>
@@ -227,6 +228,7 @@
           </ul>
         </nav>
         {% endif %}
+      </div>
       </div>
     </main>
   </div>

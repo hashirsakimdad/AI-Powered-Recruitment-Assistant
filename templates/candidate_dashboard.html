@@ -33,7 +33,7 @@
     style="display:none;position:fixed;top:1rem;left:1rem;z-index:200;background:rgba(124,58,237,0.8);border:none;color:#fff;width:40px;height:40px;border-radius:var(--radius);font-size:1.2rem;cursor:pointer;">☰</button>
   <div id="sidebarOverlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;" aria-hidden="true"></div>
 
-  <div style="display:flex;min-height:100vh;">
+  <div class="app-layout">
     <nav class="sidebar">
       <div class="sidebar-logo">✦ AI Recruit</div>
       <ul class="sidebar-nav">
@@ -48,6 +48,7 @@
     </nav>
 
     <main class="main-content">
+      <div class="content-inner">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
         <div>
           <h1 style="font-size:1.6rem;font-weight:700;margin:0;">Candidate Dashboard</h1>
@@ -119,51 +120,50 @@
         </form>
 
         {% if jobs %}
-        <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        <div class="jobs-grid">
           {% for job in jobs %}
-          <article class="glass-card" style="padding:1.25rem;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.75rem;">
+          <article class="job-card">
+            <div class="job-card-header">
               <div>
-                <h3 style="margin:0 0 0.35rem;font-size:1.05rem;">
-                  <a href="{{ url_for('candidate.job_details', job_id=job.id) }}" style="color:var(--primary-light);text-decoration:none;">{{ job.title }}</a>
-                </h3>
-                <p style="margin:0;color:var(--text-muted);font-size:0.85rem;">
-                  {% if job.company_name %}{{ job.company_name }}{% endif %}
-                  {% if job.location %} · {{ job.location }}{% endif %}
-                  {% if job.salary_range %} · {{ job.salary_range }}{% endif %}
-                </p>
-                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem;">
-                  {% if job.job_type %}<span class="status-badge status-pending">{{ job.job_type }}</span>{% endif %}
-                  {% if job.work_mode %}<span class="status-badge status-under_review">{{ job.work_mode }}</span>{% endif %}
-                  {% if job.experience_level %}<span class="status-badge status-shortlisted">{{ job.experience_level }}</span>{% endif %}
-                </div>
+                <h4 class="job-title">
+                  <a href="{{ url_for('candidate.job_details', job_id=job.id) }}">{{ job.title }}</a>
+                </h4>
+                <span class="job-company">{{ job.company_name or 'Company' }}</span>
               </div>
+              {% if job.job_type %}<span class="job-type-badge">{{ job.job_type }}</span>{% endif %}
             </div>
-            <p style="color:var(--text-muted);font-size:0.88rem;line-height:1.5;margin:0 0 0.75rem;">
-              {{ job.description[:220] }}{% if job.description|length > 220 %}…{% endif %}
-            </p>
-            <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:1rem;">
-              {% for skill in job.required_skills.split(',')[:8] %}
-              <span style="background:rgba(124,58,237,0.12);color:#A78BFA;padding:0.2rem 0.6rem;border-radius:999px;font-size:0.75rem;">{{ skill.strip() }}</span>
+            <div class="job-tags">
+              {% if job.work_mode %}<span class="tag">{{ job.work_mode }}</span>{% endif %}
+              {% if job.experience_level %}<span class="tag">{{ job.experience_level }}</span>{% endif %}
+              {% if job.location %}<span class="tag">📍 {{ job.location }}</span>{% endif %}
+              {% if job.salary_range %}<span class="tag salary">💰 {{ job.salary_range }}</span>{% endif %}
+            </div>
+            <p class="job-desc">{{ job.description[:120] }}{% if job.description|length > 120 %}…{% endif %}</p>
+            <div class="job-skills">
+              {% for skill in job.required_skills.split(',')[:6] %}
+              <span>{{ skill.strip() }}</span>
               {% endfor %}
             </div>
 
             <form action="{{ url_for('candidate.upload_resume', job_id=job.id) }}" method="POST" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.75rem;margin-bottom:1rem;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
                 <input type="text" name="name" placeholder="Your name" required value="{{ user.email.split('@')[0]|title if user else '' }}"
-                  style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:0.55rem 0.85rem;color:var(--text);" />
+                  class="form-input" style="padding:0.55rem 0.85rem;font-size:0.85rem;" />
                 <input type="email" name="email" placeholder="your@email.com" required value="{{ user.email if user else '' }}" readonly
-                  style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:0.55rem 0.85rem;color:var(--text);opacity:0.85;" />
+                  class="form-input" style="padding:0.55rem 0.85rem;font-size:0.85rem;opacity:0.85;" />
               </div>
               <div class="upload-zone" id="uploadZone-{{ job.id }}">
                 <input type="file" name="resume" accept=".pdf,.doc,.docx" onchange="previewFile(this, {{ job.id }})" />
                 <div class="upload-icon">📄</div>
-                <div style="font-weight:500;">Drop your resume here</div>
+                <div style="font-weight:500;font-size:0.9rem;">Drop your resume here</div>
                 <div class="upload-hint">PDF or Word · Max 5MB</div>
                 <div id="filePreview-{{ job.id }}" style="margin-top:0.5rem;color:#A78BFA;font-size:0.85rem;"></div>
               </div>
-              <button type="submit" class="btn-primary-custom" style="margin-top:1rem;">Upload &amp; Analyze</button>
+              <div class="job-card-footer">
+                <a href="{{ url_for('candidate.job_details', job_id=job.id) }}" class="btn-ghost">View Details</a>
+                <button type="submit" class="btn-primary-custom" style="margin-left:auto;padding:0.45rem 1.25rem;font-size:0.85rem;">Upload &amp; Analyze</button>
+              </div>
             </form>
           </article>
           {% endfor %}
@@ -230,6 +230,7 @@
         {% endfor %}
       </section>
       {% endif %}
+      </div>
     </main>
   </div>
 

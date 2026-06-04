@@ -8,193 +8,175 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  <style>
-    .form-group { margin-bottom: 1.4rem; }
-    .form-label {
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #94A3B8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
-    }
-    .form-input,
-    .form-select,
-    .form-textarea {
-      width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      color: #F8FAFC;
-      font-size: 0.92rem;
-      font-family: 'Inter', sans-serif;
-      outline: none;
-      transition: all 0.2s;
-      box-sizing: border-box;
-    }
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
-      border-color: #7C3AED;
-      background: rgba(124,58,237,0.08);
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
-    }
-    .form-input::placeholder,
-    .form-textarea::placeholder { color: #475569; }
-    .form-select option { background: #0F1535; color: #F8FAFC; }
-    .form-textarea { resize: vertical; min-height: 100px; }
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    .skills-hint {
-      font-size: 0.78rem;
-      color: #475569;
-      margin-top: 0.35rem;
-    }
-    .submit-row {
-      display: flex;
-      gap: 0.75rem;
-      padding-top: 0.5rem;
-    }
-    @media (max-width: 600px) {
-      .form-row { grid-template-columns: 1fr; }
-    }
-  </style>
+  <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
 </head>
 <body>
-<div style="display:flex; min-height:100vh;">
+<div class="app-layout">
 
-  <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-logo">✦ AI Recruit</div>
     <ul class="sidebar-nav">
-      <li><a href="{{ url_for('recruiter.dashboard') }}"><i class="fa-solid fa-gauge"></i>Dashboard</a></li>
-      <li><a href="{{ url_for('recruiter.create_job') }}" class="{{ 'active' if not editing else '' }}"><i class="fa-solid fa-briefcase"></i>Post a Job</a></li>
-      <li><a href="{{ url_for('recruiter.dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i>Candidates</a></li>
-      <li><a href="{{ url_for('recruiter.analytics') }}"><i class="fa-solid fa-chart-pie"></i>Analytics</a></li>
+      <li><a href="{{ url_for('recruiter.dashboard') }}" class="{% if request.endpoint == 'recruiter.dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('recruiter.create_job') }}" class="{% if request.endpoint in ('recruiter.create_job', 'recruiter.edit_job') %}active{% endif %}"><i class="fa-solid fa-briefcase"></i> Post a Job</a></li>
+      <li><a href="{{ url_for('recruiter.dashboard') }}#candidates-section"><i class="fa-solid fa-users"></i> Candidates</a></li>
+      <li><a href="{{ url_for('recruiter.analytics') }}" class="{% if request.endpoint == 'recruiter.analytics' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
     </ul>
     {% with button_style='display:flex;align-items:center;gap:.75rem;color:#EF4444;padding:.7rem .9rem;border-radius:12px;font-size:.9rem;width:100%;', icon='fa-solid fa-right-from-bracket', label='Logout' %}
     {% include '_logout_form.html' %}
     {% endwith %}
   </nav>
 
-  <!-- Main Content -->
   <main class="main-content">
-    <div style="max-width: 760px;">
+    <div class="content-inner">
 
-      <!-- Header -->
-      <div style="margin-bottom: 2rem;">
-        <h1 style="font-size:1.6rem;font-weight:700;margin:0;">
-          {{ '✏️ Edit Job' if editing else '✦ Post a New Job' }}
-        </h1>
-        <p style="color:#94A3B8;font-size:.85rem;margin:.3rem 0 0;">
-          {{ 'Update the job details below.' if editing else 'Fill in the details to start receiving AI-ranked applications.' }}
-        </p>
+      <div class="page-header">
+        <h2>{{ '✏️ Edit Job' if editing else '✦ Post a New Job' }}</h2>
+        <p class="subtitle">{{ 'Update the job details below.' if editing else 'Fill in the details to start receiving AI-ranked applications.' }}</p>
       </div>
 
-      <!-- Form Card -->
-      <div class="glass-card" style="padding:2rem;">
-        <form method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.id) if editing else url_for('recruiter.create_job') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-layout">
+        <div class="form-main">
+          <div class="glass-card" style="padding:2rem;">
+            <form method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.id) if editing else url_for('recruiter.create_job') }}" class="job-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-          <!-- Title -->
-          <div class="form-group">
-            <label class="form-label">Job Title *</label>
-            <input type="text" name="title" class="form-input"
-              placeholder="e.g. Senior Python Developer"
-              value="{{ job.title if editing else '' }}" required>
+              <div class="form-group full-width">
+                <label>Job Title *</label>
+                <input type="text" name="title" class="form-input" required
+                  placeholder="e.g. Senior Python Developer"
+                  value="{{ job.title if editing else '' }}">
+              </div>
+
+              <div class="form-row two-col">
+                <div class="form-group">
+                  <label>Company Name</label>
+                  <input type="text" name="company_name" class="form-input"
+                    placeholder="e.g. Acme Corp"
+                    value="{{ job.company_name if editing else '' }}">
+                </div>
+                <div class="form-group">
+                  <label>Location</label>
+                  <input type="text" name="location" class="form-input"
+                    placeholder="e.g. Lahore / Remote"
+                    value="{{ job.location if editing else '' }}">
+                </div>
+              </div>
+
+              <div class="form-row three-col">
+                <div class="form-group">
+                  <label>Job Type</label>
+                  <select name="job_type" class="form-select">
+                    {% for jt in ['Full-time','Part-time','Contract','Internship','Freelance'] %}
+                      <option value="{{ jt }}" {{ 'selected' if (editing and job.job_type == jt) }}>{{ jt }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Work Mode</label>
+                  <select name="work_mode" class="form-select">
+                    {% for wm in ['Onsite','Remote','Hybrid'] %}
+                      <option value="{{ wm }}" {{ 'selected' if (editing and job.work_mode == wm) }}>{{ wm }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Experience Level</label>
+                  <select name="experience_level" class="form-select">
+                    {% for el in ['Entry Level','Mid Level','Senior Level','Lead','Manager'] %}
+                      <option value="{{ el }}" {{ 'selected' if (editing and job.experience_level == el) }}>{{ el }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label>Required Skills *</label>
+                <input type="text" name="required_skills" class="form-input" required
+                  placeholder="e.g. Python, Django, REST APIs, PostgreSQL"
+                  value="{{ job.required_skills if editing else '' }}">
+                <span class="form-hint">Comma-separated. Used directly by the AI scorer.</span>
+              </div>
+
+              <div class="form-row two-col">
+                <div class="form-group">
+                  <label>Salary Range <span class="optional">(optional)</span></label>
+                  <input type="text" name="salary_range" class="form-input"
+                    placeholder="e.g. $80,000 – $120,000 or Competitive"
+                    value="{{ job.salary_range if editing and job.salary_range else '' }}">
+                </div>
+                <div class="form-group">
+                  <label>Application Deadline <span class="optional">(optional)</span></label>
+                  <input type="date" name="expires_at" class="form-input"
+                    value="{{ job.expires_at.strftime('%Y-%m-%d') if editing and job.expires_at else '' }}">
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label>Job Description *</label>
+                <textarea name="description" class="form-textarea" rows="6" required
+                  placeholder="Describe responsibilities, requirements, and what makes this role unique...">{{ job.description if editing else '' }}</textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary-custom">{{ 'Save Changes' if editing else 'Post Job →' }}</button>
+                <a href="{{ url_for('recruiter.dashboard') }}" class="btn-outline-custom">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {% if not editing %}
+        <div class="form-sidebar">
+          <div class="tips-card">
+            <h4>💡 Tips for Better Results</h4>
+            <ul class="tips-list">
+              <li>
+                <strong>Be specific with skills</strong>
+                <p>Instead of "Python", write "Python, FastAPI, PostgreSQL, Docker"</p>
+              </li>
+              <li>
+                <strong>Write a clear description</strong>
+                <p>Include day-to-day responsibilities so AI can match accurately</p>
+              </li>
+              <li>
+                <strong>Set an experience level</strong>
+                <p>This helps the AI filter junior vs senior candidates correctly</p>
+              </li>
+              <li>
+                <strong>Add a salary range</strong>
+                <p>Jobs with salary info attract more quality applications</p>
+              </li>
+            </ul>
           </div>
 
-          <!-- Company + Location -->
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Company Name</label>
-              <input type="text" name="company_name" class="form-input"
-                placeholder="e.g. Acme Corp"
-                value="{{ job.company_name if editing else '' }}">
+          <div class="tips-card ai-card">
+            <h4>🤖 How AI Scoring Works</h4>
+            <div class="ai-step">
+              <span class="step-num">1</span>
+              <span>Candidate uploads resume</span>
             </div>
-            <div class="form-group">
-              <label class="form-label">Location</label>
-              <input type="text" name="location" class="form-input"
-                placeholder="e.g. Lahore / Remote"
-                value="{{ job.location if editing else '' }}">
+            <div class="ai-step">
+              <span class="step-num">2</span>
+              <span>AI extracts skills &amp; experience</span>
+            </div>
+            <div class="ai-step">
+              <span class="step-num">3</span>
+              <span>Semantic match against your job</span>
+            </div>
+            <div class="ai-step">
+              <span class="step-num">4</span>
+              <span>Score 0–100 assigned instantly</span>
             </div>
           </div>
-
-          <!-- Job Type + Work Mode + Experience -->
-          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;">
-            <div class="form-group">
-              <label class="form-label">Job Type</label>
-              <select name="job_type" class="form-select">
-                {% for jt in ['Full-time','Part-time','Contract','Internship','Freelance'] %}
-                  <option value="{{ jt }}" {{ 'selected' if (editing and job.job_type == jt) }}>{{ jt }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Work Mode</label>
-              <select name="work_mode" class="form-select">
-                {% for wm in ['Onsite','Remote','Hybrid'] %}
-                  <option value="{{ wm }}" {{ 'selected' if (editing and job.work_mode == wm) }}>{{ wm }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Experience Level</label>
-              <select name="experience_level" class="form-select">
-                {% for el in ['Entry Level','Mid Level','Senior','Lead','Manager'] %}
-                  <option value="{{ el }}" {{ 'selected' if (editing and job.experience_level == el) }}>{{ el }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-
-          <!-- Required Skills -->
-          <div class="form-group">
-            <label class="form-label">Required Skills *</label>
-            <input type="text" name="required_skills" class="form-input"
-              placeholder="e.g. Python, Django, REST APIs, PostgreSQL"
-              value="{{ job.required_skills if editing else '' }}" required>
-            <div class="skills-hint">Comma-separated. These are used directly by the AI scorer.</div>
-          </div>
-
-          <!-- Expiry -->
-          <div class="form-group">
-            <label class="form-label">Salary Range (optional)</label>
-            <input type="text" name="salary_range" class="form-input"
-              placeholder="e.g. $80,000 – $120,000 or Competitive"
-              value="{{ job.salary_range if editing and job.salary_range else '' }}">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Expires At (optional)</label>
-            <input type="date" name="expires_at" class="form-input"
-              value="{{ job.expires_at.strftime('%Y-%m-%d') if editing and job.expires_at else '' }}">
-          </div>
-
-          <!-- Description -->
-          <div class="form-group">
-            <label class="form-label">Job Description *</label>
-            <textarea name="description" class="form-textarea" rows="6"
-              placeholder="Describe responsibilities, requirements, and what makes this role unique..."
-              required>{{ job.description if editing else '' }}</textarea>
-          </div>
-
-          <!-- Actions -->
-          <div class="submit-row">
-            <button type="submit" class="btn-primary-custom" style="padding:.75rem 2rem;font-size:.95rem;">
-              {{ '💾 Save Changes' if editing else '🚀 Post Job' }}
-            </button>
-            <a href="{{ url_for('recruiter.dashboard') }}" class="btn-outline-custom" style="padding:.75rem 1.5rem;font-size:.95rem;text-decoration:none;">
-              Cancel
-            </a>
-          </div>
-        </form>
+        </div>
+        {% endif %}
       </div>
 
     </div>
