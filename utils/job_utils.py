@@ -5,7 +5,9 @@ from models import JobPosting, db
 
 def get_filtered_jobs(query_str: str, job_type: str, work_mode: str):
     """Return active, non-expired jobs matching optional search filters."""
-    jobs_query = JobPosting.query.filter(JobPosting.is_active.is_(True))
+    jobs_query = JobPosting.query.filter(
+        db.or_(JobPosting.is_active.is_(True), JobPosting.is_active.is_(None))
+    )
     jobs_query = jobs_query.filter(
         db.or_(
             JobPosting.expires_at.is_(None),

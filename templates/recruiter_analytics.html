@@ -60,6 +60,18 @@
       max-width: 280px;
       margin: 0 auto;
     }
+    .chart-empty-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.88rem;
+      padding: 1rem;
+      pointer-events: none;
+    }
     @media (max-width: 900px) {
       .analytics-grid { grid-template-columns: 1fr; }
     }
@@ -127,12 +139,14 @@
         <h3><i class="fa-solid fa-chart-bar" style="color:#7C3AED;"></i> Score Distribution</h3>
         <div class="chart-wrap">
           <canvas id="scoreDistChart"></canvas>
+          <div id="scoreDistEmpty" class="chart-empty-overlay" style="display:none;">No data yet — post a job and receive applications</div>
         </div>
       </div>
       <div class="chart-card">
         <h3><i class="fa-solid fa-chart-pie" style="color:#06B6D4;"></i> Applications per Job</h3>
         <div class="chart-wrap doughnut">
           <canvas id="appsPerJobChart"></canvas>
+          <div id="appsPerJobEmpty" class="chart-empty-overlay" style="display:none;">Post jobs and receive applications<br>to see distribution here</div>
         </div>
       </div>
     </div>
@@ -166,6 +180,10 @@ Chart.defaults.font.size = 12;
 // ── 1. Score Distribution Bar Chart ────────────────────────
 (function() {
   const buckets = {{ score_buckets | tojson }};
+  const allZero = !buckets.length || buckets.every(v => v === 0);
+  if (allZero) {
+    document.getElementById('scoreDistEmpty').style.display = 'flex';
+  }
   const ctx = document.getElementById('scoreDistChart').getContext('2d');
   new Chart(ctx, {
     type: 'bar',
@@ -210,8 +228,9 @@ Chart.defaults.font.size = 12;
         },
         y: {
           beginAtZero: true,
+          suggestedMax: allZero ? 5 : undefined,
           grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#94A3B8', stepSize: 1 }
+          ticks: { color: '#94A3B8', stepSize: 1, precision: 0 }
         }
       }
     }
@@ -223,6 +242,11 @@ Chart.defaults.font.size = 12;
   const appsData = {{ apps_per_job | tojson }};
   const labels = Object.keys(appsData);
   const values = Object.values(appsData);
+  const hasData = values.some(v => v > 0);
+  if (!hasData) {
+    document.getElementById('appsPerJobEmpty').style.display = 'flex';
+    document.getElementById('appsPerJobChart').style.opacity = '0.25';
+  }
   const ctx = document.getElementById('appsPerJobChart').getContext('2d');
   const palette = [
     'rgba(124,58,237,0.8)','rgba(6,182,212,0.8)',

@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In - AI Recruit</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -72,9 +78,9 @@
         </p>
 
         <p style="display:flex; gap:1rem; justify-content:center; margin-top:2rem; flex-wrap:wrap;">
-          <span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34D399; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ 95% Accuracy</span>
-          <span style="background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); color:#22D3EE; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ Instant Scoring</span>
-          <span style="background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.3); color:#A78BFA; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ Zero Bias</span>
+          <span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34D399; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ AI-Powered Scoring</span>
+          <span style="background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); color:#22D3EE; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ Semantic Matching</span>
+          <span style="background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.3); color:#A78BFA; padding:0.35rem 1rem; border-radius:999px; font-size:0.8rem;">✓ Instant Ranking</span>
         </p>
       </section>
     </aside>
@@ -164,8 +170,8 @@
     switchRole('recruiter');
 
     const DEMO = {
-      recruiter: { email: 'recruiter@demo.com', password: 'demo123' },
-      candidate: { email: 'candidate@demo.com', password: 'demo123' }
+      recruiter: { email: 'recruiter@example.com', password: 'recruiter123' },
+      candidate: { email: 'candidate@example.com', password: 'candidate123' }
     };
     function demoLogin(role) {
       document.getElementById('email').value = DEMO[role].email;

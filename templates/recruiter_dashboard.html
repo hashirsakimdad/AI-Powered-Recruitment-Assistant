@@ -9,7 +9,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
   <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -31,10 +38,10 @@
     <nav class="sidebar">
       <div class="sidebar-logo">✦ AI Recruit</div>
       <ul class="sidebar-nav">
-        <li><a href="{{ url_for('recruiter.dashboard') }}" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
-        <li><a href="{{ url_for('recruiter.create_job') }}"><i class="fa-solid fa-briefcase"></i> Post a Job</a></li>
+        <li><a href="{{ url_for('recruiter.dashboard') }}" class="{% if request.endpoint == 'recruiter.dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('recruiter.create_job') }}" class="{% if request.endpoint == 'recruiter.create_job' %}active{% endif %}"><i class="fa-solid fa-briefcase"></i> Post a Job</a></li>
         <li><a href="#candidates-section"><i class="fa-solid fa-users"></i> Candidates</a></li>
-        <li><a href="{{ url_for('recruiter.analytics') }}"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
+        <li><a href="{{ url_for('recruiter.analytics') }}" class="{% if request.endpoint == 'recruiter.analytics' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
       </ul>
       {% with button_style='display:flex;align-items:center;gap:0.75rem;color:#EF4444;padding:0.7rem 0.9rem;border-radius:var(--radius);font-size:0.9rem;width:100%;', icon='fa-solid fa-right-from-bracket', label=' Logout' %}
       {% include '_logout_form.html' %}
@@ -72,6 +79,15 @@
           <div class="stat-label">Shortlisted</div>
         </div>
       </div>
+
+      {% if jobs|length == 0 and submissions|length == 0 %}
+      <div class="empty-state-banner">
+        <div class="empty-state-icon">🚀</div>
+        <h3>Welcome to AI Recruit!</h3>
+        <p>Post your first job to start receiving AI-scored applications.</p>
+        <a href="{{ url_for('recruiter.create_job') }}" class="btn-primary-custom">+ Post Your First Job</a>
+      </div>
+      {% endif %}
 
       {% if jobs %}
       <div class="glass-card" style="margin-bottom:1.5rem;padding:1.25rem 1.5rem;">
@@ -180,7 +196,14 @@
             </tbody>
           </table>
           {% else %}
-          <p style="padding:2rem;text-align:center;color:var(--text-muted);">No candidate submissions yet.</p>
+          <div class="empty-candidates" style="padding:2rem;text-align:center;">
+            <p style="color:var(--text-muted);margin-bottom:0.5rem;">No applications received yet.</p>
+            {% if jobs|length == 0 %}
+            <p class="hint" style="color:var(--text-muted);font-size:0.88rem;">Start by <a href="{{ url_for('recruiter.create_job') }}" style="color:var(--primary-light);">posting a job</a> to receive applications.</p>
+            {% else %}
+            <p class="hint" style="color:var(--text-muted);font-size:0.88rem;">You have {{ jobs|length }} active job{{ 's' if jobs|length != 1 else '' }}. Share listings with candidates!</p>
+            {% endif %}
+          </div>
           {% endif %}
         </div>
         {% if pagination and pagination.pages > 1 %}

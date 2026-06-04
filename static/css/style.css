@@ -3502,6 +3502,33 @@ p {
 
 html { scroll-behavior: smooth; }
 
+.empty-state-banner {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  margin: 2rem 0;
+}
+.empty-state-banner .empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+.empty-state-banner h3 {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+.empty-state-banner p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.score-badge.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 body {
   background: var(--bg);
   color: var(--text);

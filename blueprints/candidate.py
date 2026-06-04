@@ -38,7 +38,10 @@ def dashboard():
 
     jobs_query = get_filtered_jobs(query, job_type, work_mode)
     jobs = jobs_query.paginate(page=page, per_page=20, error_out=False)
+    has_filters = bool(query or job_type or work_mode)
+    total_open_jobs = get_filtered_jobs("", "", "").count()
     user_id = session["user_id"]
+    user = db.session.get(User, user_id)
     my_submissions = ResumeSubmission.query.filter_by(candidate_id=user_id).all()
     percentiles = {
         sub.id: get_score_percentile(sub.id, sub.job_id) for sub in my_submissions
@@ -49,9 +52,12 @@ def dashboard():
         jobs=jobs.items,
         jobs_pagination=jobs,
         submissions=my_submissions,
+        user=user,
         search_query=query,
         selected_job_type=job_type,
         selected_work_mode=work_mode,
+        has_filters=has_filters,
+        total_open_jobs=total_open_jobs,
         percentiles=percentiles,
     )
 
@@ -89,12 +95,15 @@ def upload_resume(job_id):
             current_app.config["UPLOAD_FOLDER"],
             current_app.config["ALLOWED_EXTENSIONS"],
         )
+        user = db.session.get(User, user_id)
+        candidate_name = clean_text(request.form.get("name")) or "Candidate"
+        candidate_email = user.email if user else clean_text(request.form.get("email", ""))
         submission = create_pending_submission(
             dest,
             job,
             user_id,
-            clean_text(request.form.get("name", "Candidate")),
-            clean_text(request.form.get("email", "unknown@example.com")),
+            candidate_name,
+            candidate_email,
         )
         start_background_scoring(current_app._get_current_object(), submission, dest, job)
         flash("Resume uploaded. Scoring in progress...", "success")

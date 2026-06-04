@@ -1,66 +1,113 @@
-{% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
-{% block content %}
-<div class="container-fluid px-4 py-4">
-  <h1 class="mb-2">My Profile</h1>
-  <p class="text-secondary mb-4">{{ user.email }} · Member since {{ user.created_at.strftime('%B %Y') if user.created_at else '—' }}</p>
-  <div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Applications</div><div class="fs-4">{{ total_applications }}</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Average Score</div><div class="fs-4">{{ average_score }}/100</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Shortlisted</div><div class="fs-4">{{ shortlisted_count }}</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="small text-muted">Selected</div><div class="fs-4">{{ selected_count }}</div></div></div>
-  </div>
-  <h2 class="h5 mb-3">My submissions</h2>
-  {% for sub in submissions %}
-  <div class="card mb-3">
-    <div class="card-body">
-      <div class="d-flex justify-content-between flex-wrap gap-2">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Profile — AI Recruit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+</head>
+<body class="page-enter">
+  <div style="display:flex;min-height:100vh;">
+    <nav class="sidebar">
+      <div class="sidebar-logo">✦ AI Recruit</div>
+      <ul class="sidebar-nav">
+        <li><a href="{{ url_for('candidate.dashboard') }}"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('candidate.profile') }}" class="active"><i class="fa-solid fa-user"></i> My Profile</a></li>
+        <li><a href="{{ url_for('candidate.dashboard') }}#find-jobs"><i class="fa-solid fa-search"></i> Find Jobs</a></li>
+        <li><a href="{{ url_for('candidate.dashboard') }}#my-applications"><i class="fa-solid fa-file-lines"></i> My Applications</a></li>
+      </ul>
+      {% with button_style='display:flex;align-items:center;gap:0.75rem;color:#EF4444;padding:0.7rem 0.9rem;border-radius:var(--radius);font-size:0.9rem;width:100%;', icon='fa-solid fa-right-from-bracket', label=' Logout' %}
+      {% include '_logout_form.html' %}
+      {% endwith %}
+    </nav>
+
+    <main class="main-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
         <div>
-          <strong>{{ sub.job.title if sub.job else 'Job' }}</strong>
-          <div class="text-muted small">{{ sub.job.company_name if sub.job else '' }} · {{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '' }}</div>
+          <h1 style="font-size:1.6rem;font-weight:700;margin:0;">My Profile</h1>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin:0.25rem 0 0;">{{ user.email }} · Member since {{ user.created_at.strftime('%B %Y') if user.created_at else '—' }}</p>
         </div>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-          {% if sub.scoring_status == 'processing' %}
-          <span class="badge bg-warning text-dark">⏳ Scoring in progress...</span>
-          {% elif sub.scoring_status == 'failed' %}
-          <span class="badge bg-danger">Scoring failed</span>
-          {% elif sub.score is not none %}
-          <span class="badge bg-primary">{{ sub.score|round(1) }}/100</span>
-          {% endif %}
-          <span class="badge bg-secondary">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
-          <a href="{{ url_for('candidate.download_resume', submission_id=sub.id) }}" class="btn btn-sm btn-outline-secondary">Download Resume</a>
+        <button type="button" class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:2rem;">
+        <div class="stat-card">
+          <div class="stat-value">{{ total_applications }}</div>
+          <div class="stat-label">Applications</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ average_score if total_applications else '—' }}{% if total_applications %}/100{% endif %}</div>
+          <div class="stat-label">Average Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ shortlisted_count }}</div>
+          <div class="stat-label">Shortlisted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ selected_count }}</div>
+          <div class="stat-label">Selected</div>
         </div>
       </div>
-      {% if sub.explanation %}
-      <button class="btn btn-sm btn-outline-info mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#feedback-{{ sub.id }}">View Feedback</button>
-      <div class="collapse mt-2" id="feedback-{{ sub.id }}">
-        {% set expl = sub.explanation or {} %}
-        {% set scores = expl.get('scores', {}) if expl is mapping else {} %}
-        {% if expl.get('skill_match') is not none or scores.get('skill_match') is not none %}
-        <div class="mb-2">
-          <strong>Skill Match:</strong>
-          <div class="progress">
-            <div class="progress-bar bg-success" style="width: {{ expl.get('skill_match', scores.get('skill_match', 0)) }}%">
-              {{ expl.get('skill_match', scores.get('skill_match', 0)) }}%
-            </div>
+
+      <h2 style="font-size:1.1rem;font-weight:600;margin:0 0 1rem;">Application History</h2>
+      {% for sub in submissions %}
+      <div class="glass-card" style="padding:1.25rem;margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;align-items:center;">
+          <div>
+            <strong>{{ sub.job.title if sub.job else 'Job Removed' }}</strong>
+            <div style="color:var(--text-muted);font-size:0.85rem;">{{ sub.job.company_name if sub.job else '' }} · {{ sub.created_at.strftime('%b %d, %Y') if sub.created_at else '' }}</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+            {% if sub.scoring_status == 'processing' %}
+            <span class="score-badge pending">⏳ Scoring...</span>
+            {% elif sub.scoring_status == 'failed' %}
+            <span class="score-badge score-low">Failed</span>
+            {% elif sub.score is not none %}
+            <span class="score-badge {% if sub.score >= 80 %}score-high{% elif sub.score >= 60 %}score-medium{% else %}score-low{% endif %}">{{ sub.score|round(1) }}/100</span>
+            {% endif %}
+            <span class="status-badge status-{{ sub.status or 'pending' }}">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
+            <a href="{{ url_for('candidate.download_resume', submission_id=sub.id) }}" class="btn-outline-custom" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Download</a>
+          </div>
+        </div>
+        {% if sub.explanation %}
+        <button type="button" class="btn-outline-custom" style="margin-top:0.75rem;padding:0.35rem 0.75rem;font-size:0.8rem;" data-bs-toggle="collapse" data-bs-target="#feedback-{{ sub.id }}">View AI Feedback</button>
+        <div class="collapse mt-2" id="feedback-{{ sub.id }}">
+          {% set expl = sub.explanation or {} %}
+          {% set scores = expl.get('scores', {}) if expl is mapping else {} %}
+          <div class="glass-card" style="padding:1rem;margin-top:0.5rem;">
+            {% if expl.get('skill_match') is not none or scores.get('skill_match') is not none %}
+            <p class="mb-1"><strong>Skill Match:</strong> {{ expl.get('skill_match', scores.get('skill_match', 0)) }}%</p>
+            {% endif %}
+            {% if expl.get('rationale') or scores.get('rationale') %}
+            <ul style="color:var(--text-muted);font-size:0.88rem;padding-left:1.2rem;">
+              {% for r in (expl.get('rationale') or scores.get('rationale', [])) %}<li>{{ r }}</li>{% endfor %}
+            </ul>
+            {% endif %}
           </div>
         </div>
         {% endif %}
-        {% if expl.get('rationale') or scores.get('rationale') %}
-        <p class="mt-2 mb-1"><strong>AI Analysis:</strong></p>
-        <ul class="small text-muted">{% for r in (expl.get('rationale') or scores.get('rationale', [])) %}<li>{{ r }}</li>{% endfor %}</ul>
-        {% endif %}
-        {% set gaps = (sub.skill_gap or '[]') %}
-        {% if gaps and gaps != '[]' %}
-        <p class="mb-1"><strong>Skills to Develop:</strong></p>
-        <p class="text-muted small">{{ gaps }}</p>
-        {% endif %}
       </div>
-      {% endif %}
-    </div>
+      {% else %}
+      <div class="empty-state-banner">
+        <div class="empty-state-icon">📄</div>
+        <h3>No applications yet</h3>
+        <p>Browse open jobs and upload your resume to get AI-powered feedback.</p>
+        <a href="{{ url_for('candidate.dashboard') }}#find-jobs" class="btn-primary-custom">Browse Jobs</a>
+      </div>
+      {% endfor %}
+    </main>
   </div>
-  {% else %}
-  <p class="text-muted">No applications yet.</p>
-  {% endfor %}
-</div>
-{% endblock %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

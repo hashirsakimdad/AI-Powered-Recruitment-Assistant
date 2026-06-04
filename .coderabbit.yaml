@@ -1,68 +1,46 @@
 # .coderabbit.yaml
-# CodeRabbit configuration for AI-Powered Recruitment Assistant
-
 language: "en-US"
 
 reviews:
-  # Auto-review all PRs immediately
   auto_review:
     enabled: true
     drafts: false
 
-  # What CodeRabbit should focus on for this project
-  profile: "assertive"  # strict mode — catch everything
+  profile: "assertive"
 
-  # Areas to review with high priority
   path_filters:
-    - "!migrations/**"         # skip auto-generated migration files
-    - "!static/vendor/**"      # skip third-party JS/CSS
-    - "!instance/**"           # skip local dev data
+    - "!migrations/**"
+    - "!instance/**"
+    - "!static/vendor/**"
+    - "!*.min.js"
+    - "!*.min.css"
 
-  # Custom instructions for this specific project
   instructions: |
-    This is a Flask-based AI recruitment platform handling sensitive hiring data.
+    This is a Flask recruitment platform handling sensitive hiring data.
 
-    CRITICAL — check these in every review:
+    ALWAYS check:
 
-    1. SECURITY:
-       - Every POST route must have @login_required or @role_required decorator
-       - Every route returning data must verify user owns that data (user isolation)
-       - No raw SQL — SQLAlchemy ORM only
-       - No secrets or credentials hardcoded anywhere
-       - All user inputs must be sanitized with bleach before DB insert
-       - File uploads must validate extension before saving
+    1. SECURITY — Every POST route must have @login_required or @role_required.
+       Every data query must filter by session user_id (user isolation).
+       No hardcoded credentials anywhere. All inputs sanitized before DB.
 
-    2. AUTHORIZATION:
-       - Recruiters can only see/modify their OWN jobs and submissions
-       - Candidates can only see/download their OWN submissions
-       - Admin routes must have @role_required("admin")
-       - API endpoints must check ownership before returning data
+    2. BUGS — Flag any route that renders a template without passing required
+       template variables. Flag any url_for() call referencing a non-existent route.
+       Flag any template link pointing to a route that does not exist.
 
-    3. AI SCORING:
-       - Scoring must happen in background thread (never block the HTTP request)
-       - Background threads must push Flask app context before DB access
-       - scoring_status must be updated to "failed" on exceptions (never silently fail)
+    3. BROKEN LINKS — Check all sidebar nav links in templates match actual
+       Flask blueprint route names (auth.*, recruiter.*, candidate.*, admin.*, api.*).
 
-    4. DATABASE:
-       - Use db.session.get(Model, id) — NOT Model.query.get(id) (deprecated)
-       - All new columns need a corresponding Flask-Migrate migration
-       - Foreign key relationships must enforce user isolation at query level
+    4. EMPTY STATES — Flag any template that shows an empty list/table with no
+       user guidance (no CTA, no explanation).
 
-    5. EMAIL:
-       - Email sending must be async (background thread)
-       - Only send emails for: shortlisted, selected, rejected statuses
-       - Never send email if MAIL_USERNAME is not configured
+    5. CHARTS — Flag any Chart.js initialization that does not handle the case
+       where all data values are 0.
 
-    6. TEMPLATES:
-       - Every <form method="POST"> must have csrf_token
-       - No hardcoded URLs — always use url_for() with blueprint prefix
-       - User-generated content must be escaped (Jinja2 autoescaping must be ON)
+    6. DARK MODE — Flag any UI theme state that is not persisted to localStorage.
 
-    7. TESTS:
-       - Every new route needs at least one test
-       - Every authorization boundary needs a test
-       - Tests must not use production DB — only SQLite in-memory
+    7. FORMS — Every form with method="POST" must have CSRF token when Flask-WTF
+       is enabled. Flag missing tokens.
 
 chat:
-  # Enable @coderabbit mentions in PR comments
   auto_reply: true
