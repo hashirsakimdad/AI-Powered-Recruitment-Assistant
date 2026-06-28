@@ -116,3 +116,4 @@ def seed_demo_users(db_session) -> None:
             user.set_password(password)
             db_session.add(user)
     db_session.commit()
+
