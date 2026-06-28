@@ -70,8 +70,7 @@ def get_neural_score(resume_text: str, job_description: str) -> dict:
         else:
             from sentence_transformers import util
 
-            confidence = float(util.cos_sim(resume_emb, job_emb)[0][0])
-            confidence = (confidence + 1) / 2
+            confidence = max(0.0, float(util.cos_sim(resume_emb, job_emb)[0][0]))
             source = "cosine_similarity_fallback"
 
         if confidence >= 0.75:
