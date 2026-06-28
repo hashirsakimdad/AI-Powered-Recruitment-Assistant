@@ -74,7 +74,7 @@
             {% elif sub.scoring_status == 'failed' %}
             <span class="score-badge score-low">Failed</span>
             {% elif sub.score is not none %}
-            <span class="score-badge {% if sub.score >= 80 %}score-high{% elif sub.score >= 60 %}score-medium{% else %}score-low{% endif %}">{{ sub.score|round(1) }}/100</span>
+            <span class="score-badge {% if sub.score >= 80 %}score-high{% elif sub.score >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ sub.score|round(1) }}/100</span>
             {% endif %}
             <span class="status-badge status-{{ sub.status or 'pending' }}">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
             <a href="{{ url_for('candidate.download_resume', submission_id=sub.id) }}" class="btn-outline-custom" style="padding:0.35rem 0.75rem;font-size:0.8rem;">Download</a>
