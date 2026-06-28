@@ -75,9 +75,13 @@
                 <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
                   {% if sub.scoring_status == 'processing' %}
                   <span id="score-badge-{{ sub.id }}" class="status-badge status-under_review">⏳ Scoring in progress...</span>
+                  {% elif sub.scoring_status == 'failed' %}
+                  <span id="score-badge-{{ sub.id }}" class="score-badge score-low">Scoring failed — try re-uploading</span>
                   {% elif sub.score is not none %}
                   {% set score = sub.score or 0 %}
-                  <span id="score-badge-{{ sub.id }}" class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ score }}/100</span>
+                  <span id="score-badge-{{ sub.id }}" class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ score|round(1) }}/100</span>
+                  {% else %}
+                  <span id="score-badge-{{ sub.id }}" class="status-badge status-under_review">Awaiting score...</span>
                   {% endif %}
                   <span class="status-badge status-{{ sub.status or 'pending' }}">{{ (sub.status or 'pending')|replace('_',' ')|title }}</span>
                   <button type="button" class="btn-outline-custom" style="padding:0.35rem 0.75rem;font-size:0.8rem;" data-bs-toggle="collapse" data-bs-target="#fb-{{ sub.id }}">View Feedback</button>
@@ -203,7 +207,13 @@
         <div class="glass-card" style="padding:1.25rem;margin-bottom:1rem;">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
             <strong>{{ sub.job.title }}</strong>
-            <span class="score-badge {% if (sub.score or 0) >= 80 %}score-high{% elif (sub.score or 0) >= 60 %}score-medium{% else %}score-low{% endif %}">{{ sub.score or 0 }}/100</span>
+            {% if sub.scoring_status == 'processing' %}
+            <span class="status-badge status-under_review">⏳ Scoring...</span>
+            {% elif sub.scoring_status == 'failed' %}
+            <span class="score-badge score-low">Scoring failed</span>
+            {% elif sub.score is not none %}
+            <span class="score-badge {% if (sub.score or 0) >= 80 %}score-high{% elif (sub.score or 0) >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ sub.score|round(1) }}/100</span>
+            {% endif %}
           </div>
           {% if sub.explanation %}
           {% set feedback = sub.explanation.get('feedback', {}) if sub.explanation is mapping else {} %}
@@ -288,8 +298,9 @@
         fetch('/api/submission/' + id + '/status')
           .then(r => r.json())
           .then(data => {
+            console.log('[CV SCORING] Poll status for submission', id, data);
+            const el = document.getElementById('score-badge-' + id);
             if (data.scoring_status === 'scored' && data.score != null) {
-              const el = document.getElementById('score-badge-' + id);
               if (el) {
                 const score = Number(data.score);
                 el.className = scoreBadgeClass(score);
@@ -298,9 +309,19 @@
               const idx = processingIds.indexOf(id);
               if (idx !== -1) processingIds.splice(idx, 1);
               if (processingIds.length === 0 && pollTimer) clearInterval(pollTimer);
+            } else if (data.scoring_status === 'failed') {
+              if (el) {
+                el.className = 'score-badge score-low';
+                el.textContent = data.error
+                  ? 'Scoring failed: ' + data.error
+                  : 'Scoring failed — try re-uploading';
+              }
+              const idx = processingIds.indexOf(id);
+              if (idx !== -1) processingIds.splice(idx, 1);
+              if (processingIds.length === 0 && pollTimer) clearInterval(pollTimer);
             }
           })
-          .catch(() => {});
+          .catch(err => console.error('[CV SCORING] Poll error for submission', id, err));
       });
     }
     let pollTimer = null;

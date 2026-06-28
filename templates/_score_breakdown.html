@@ -1,13 +1,29 @@
 {% set expl = sub.explanation or {} %}
 {% set scores = expl.get('scores', {}) if expl is mapping else {} %}
+<div class="mb-2">
+  <strong>Score: {{ sub.score|round(1) if sub.score is not none else '—' }}/100</strong>
+</div>
 <div class="progress mb-2" style="height: 8px;">
   <div class="progress-bar bg-primary" style="width: {{ sub.score or 0 }}%"></div>
 </div>
+{% if expl.get('llm_summary') %}
+<p class="small text-muted">{{ expl.get('llm_summary') }}</p>
+{% endif %}
 <table class="table table-sm table-bordered" style="font-size:0.85rem;">
   <tr><th>Skill Match</th><td>{% if expl is mapping %}{{ expl.get('skill_match', scores.get('skill_match', '—')) }}{% else %}{{ scores.get('skill_match', '—') }}{% endif %}%</td></tr>
   <tr><th>Experience Match</th><td>{% if expl is mapping %}{{ expl.get('experience_match', scores.get('experience_match', '—')) }}{% else %}{{ scores.get('experience_match', '—') }}{% endif %}%</td></tr>
   <tr><th>Keyword Match</th><td>{% if expl is mapping %}{{ expl.get('keyword_match', scores.get('keyword_match', '—')) }}{% else %}{{ scores.get('keyword_match', '—') }}{% endif %}%</td></tr>
 </table>
+{% set strengths = expl.get('strengths', []) if expl is mapping else [] %}
+{% if strengths %}
+<p class="small text-muted mb-1"><strong>Strengths:</strong></p>
+<ul class="small">{% for s in strengths %}<li>{{ s }}</li>{% endfor %}</ul>
+{% endif %}
+{% set weaknesses = expl.get('weaknesses', []) if expl is mapping else [] %}
+{% if weaknesses %}
+<p class="small text-muted mb-1"><strong>Weaknesses:</strong></p>
+<ul class="small">{% for w in weaknesses %}<li>{{ w }}</li>{% endfor %}</ul>
+{% endif %}
 {% set rationale = (expl.get('rationale') if expl is mapping else none) or scores.get('rationale', []) %}
 {% if rationale %}
 <p class="small text-muted mb-1"><strong>Rationale:</strong></p>

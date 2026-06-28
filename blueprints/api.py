@@ -43,11 +43,19 @@ def submission_status(submission_id):
     else:
         return jsonify({"error": "Unauthorized"}), 403
 
+    explanation = sub.explanation or {}
+    scores = explanation.get("scores", {}) if isinstance(explanation, dict) else {}
+
     return jsonify(
         {
             "scoring_status": sub.scoring_status,
             "status": sub.status,
             "score": sub.score,
+            "summary": explanation.get("llm_summary", scores.get("llm_summary", "")),
+            "strengths": explanation.get("strengths", []),
+            "weaknesses": explanation.get("weaknesses", []),
+            "recommendation": explanation.get("recommendation", ""),
+            "error": scores.get("llm_error"),
         }
     )
 
