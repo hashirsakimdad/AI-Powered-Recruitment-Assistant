@@ -36,6 +36,19 @@ SKILL_CATEGORIES = {
     "data science": "domain",
 }
 
+_model = None
+
+
+def get_model():
+    global _model
+    if _model is None:
+        print("Loading semantic model... (first time only)")
+        from sentence_transformers import SentenceTransformer
+
+        _model = SentenceTransformer("all-mpnet-base-v2")
+        print("Model loaded successfully")
+    return _model
+
 
 def normalize_score(raw: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
     """Clamp and normalize a raw score to 0-100 range."""
@@ -75,10 +88,10 @@ def compute_keyword_score(resume_text: str, required_skills_str: str) -> float:
 def compute_semantic_score(resume_text: str, job_description: str) -> float:
     """Temperature-scaled cosine similarity. Max 35 points."""
     try:
-        from sentence_transformers import SentenceTransformer, util
+        from sentence_transformers import util
         import torch
 
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        model = get_model()
         emb_resume = model.encode(resume_text, convert_to_tensor=True)
         emb_job = model.encode(job_description, convert_to_tensor=True)
         raw_sim = float(util.cos_sim(emb_resume, emb_job)[0][0])
@@ -154,6 +167,12 @@ def score(resume_text: str, job) -> Dict[str, Union[float, str, List[str]]]:
     required = [s.strip().lower() for s in required_skills.split(",") if s.strip()]
     missing = [s for s in required if s not in resume_text.lower()]
 
+    job_title = getattr(job, "title", "") or ""
+    job_description = f"{job_title} {description} {required_skills}".strip()
+    from ai.neural_classifier import get_neural_score
+
+    neural_match = get_neural_score(resume_text, job_description)
+
     return {
         "score": total,
         "keyword_score": keyword_score,
@@ -162,6 +181,7 @@ def score(resume_text: str, job) -> Dict[str, Union[float, str, List[str]]]:
         "format_score": format_score,
         "skill_gap": missing,
         "word_count": len(resume_text.split()),
+        "neural_match": neural_match,
         "breakdown_note": (
             f"keyword:{keyword_score} semantic:{semantic_score} "
             f"exp:{experience_score} fmt:{format_score}"
@@ -175,6 +195,7 @@ def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str
 
     class _Job:
         def __init__(self, data: Dict[str, str]):
+            self.title = data.get("title", "")
             self.description = data.get("description", "")
             self.required_skills = data.get("required_skills", "")
 
@@ -200,6 +221,7 @@ def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str
         "experience_match": experience_match,
         "keyword_match": keyword_match,
         "rationale": _build_rationale(keyword, experience, semantic),
+        "neural_match": result.get("neural_match"),
         "method": "weighted_v2",
         "breakdown_note": result.get("breakdown_note", ""),
     }

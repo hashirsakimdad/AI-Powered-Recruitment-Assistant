@@ -83,17 +83,9 @@
         {% if sub.explanation %}
         <button type="button" class="btn-outline-custom" style="margin-top:0.75rem;padding:0.35rem 0.75rem;font-size:0.8rem;" data-bs-toggle="collapse" data-bs-target="#feedback-{{ sub.id }}">View AI Feedback</button>
         <div class="collapse mt-2" id="feedback-{{ sub.id }}">
-          {% set expl = sub.explanation or {} %}
-          {% set scores = expl.get('scores', {}) if expl is mapping else {} %}
+          {% set feedback = sub.explanation.get('feedback', {}) if sub.explanation is mapping else {} %}
           <div class="glass-card" style="padding:1rem;margin-top:0.5rem;">
-            {% if expl.get('skill_match') is not none or scores.get('skill_match') is not none %}
-            <p class="mb-1"><strong>Skill Match:</strong> {{ expl.get('skill_match', scores.get('skill_match', 0)) }}%</p>
-            {% endif %}
-            {% if expl.get('rationale') or scores.get('rationale') %}
-            <ul style="color:var(--text-muted);font-size:0.88rem;padding-left:1.2rem;">
-              {% for r in (expl.get('rationale') or scores.get('rationale', [])) %}<li>{{ r }}</li>{% endfor %}
-            </ul>
-            {% endif %}
+            {% include '_gemini_feedback.html' %}
           </div>
         </div>
         {% endif %}

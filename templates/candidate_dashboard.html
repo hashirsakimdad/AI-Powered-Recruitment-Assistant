@@ -80,6 +80,13 @@
                   {% elif sub.score is not none %}
                   {% set score = sub.score or 0 %}
                   <span id="score-badge-{{ sub.id }}" class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">Score: {{ score|round(1) }}/100</span>
+                  {% set neural = sub.explanation.get('neural_match') if sub.explanation is mapping else none %}
+                  {% if neural %}
+                  <span class="status-badge" style="font-size:0.8rem;">
+                    AI Confidence: {{ neural.confidence }}% — {{ neural.label }}
+                    {% if neural.color == 'success' %}🟢{% elif neural.color == 'warning' %}🟡{% elif neural.color == 'danger' %}🔴{% endif %}
+                  </span>
+                  {% endif %}
                   {% else %}
                   <span id="score-badge-{{ sub.id }}" class="status-badge status-under_review">Awaiting score...</span>
                   {% endif %}
@@ -89,6 +96,12 @@
               </div>
               <div class="collapse mt-2" id="fb-{{ sub.id }}">
                 {% include '_score_breakdown.html' %}
+                {% set feedback = sub.explanation.get('feedback', {}) if sub.explanation is mapping else {} %}
+                {% if feedback.get('overall_assessment') or feedback.get('strengths') %}
+                <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);">
+                  {% include '_gemini_feedback.html' %}
+                </div>
+                {% endif %}
               </div>
             </div>
           {% endfor %}
@@ -217,24 +230,7 @@
           </div>
           {% if sub.explanation %}
           {% set feedback = sub.explanation.get('feedback', {}) if sub.explanation is mapping else {} %}
-          {% if feedback.get('summary') %}
-          <div id="feedback-md-{{ sub.id }}" class="feedback-markdown" style="font-size:0.9rem;line-height:1.6;color:var(--text-muted);"></div>
-          <script>
-            (function() {
-              const raw = {{ feedback.get('summary')|tojson }};
-              const el = document.getElementById('feedback-md-{{ sub.id }}');
-              if (el && typeof marked !== 'undefined') el.innerHTML = marked.parse(raw);
-              else if (el) el.textContent = raw;
-            })();
-          </script>
-          {% endif %}
-          {% if feedback.get('suggestions') %}
-          <ul style="margin:0.75rem 0 0;padding-left:1.25rem;color:var(--text-muted);font-size:0.88rem;">
-            {% for suggestion in feedback.get('suggestions', [])[:5] %}
-            <li style="margin-bottom:0.35rem;">{{ suggestion }}</li>
-            {% endfor %}
-          </ul>
-          {% endif %}
+          {% include '_gemini_feedback.html' %}
           {% endif %}
         </div>
         {% endfor %}

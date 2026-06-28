@@ -1,0 +1,58 @@
+{% set gf = feedback if feedback is mapping else {} %}
+{% set assessment = gf.get('overall_assessment') or gf.get('summary', '') %}
+{% if assessment %}
+<p style="font-size:0.9rem;line-height:1.6;color:var(--text-muted);margin-bottom:0.75rem;">{{ assessment }}</p>
+{% endif %}
+
+{% if gf.get('strengths') %}
+<p style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.35rem;">Strengths</p>
+<ul style="margin:0 0 0.75rem;padding-left:1.25rem;color:var(--text-muted);font-size:0.88rem;">
+  {% for item in gf.get('strengths', []) %}
+  <li style="margin-bottom:0.3rem;">{{ item }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if gf.get('missing_skills') %}
+<p style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.35rem;">Skills to develop</p>
+<ul style="margin:0 0 0.75rem;padding-left:0;list-style:none;color:var(--text-muted);font-size:0.88rem;">
+  {% for item in gf.get('missing_skills', []) %}
+  <li style="margin-bottom:0.5rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border-radius:var(--radius);">
+    {% if item is mapping %}
+    <strong>{{ item.get('skill', item) }}</strong>
+    {% if item.get('importance') %}
+    <span class="status-badge status-{{ 'shortlisted' if item.importance == 'high' else 'under_review' }}" style="margin-left:0.35rem;font-size:0.7rem;">{{ item.importance }}</span>
+    {% endif %}
+    {% if item.get('how_to_learn') %}
+    <div style="margin-top:0.25rem;font-size:0.82rem;">{{ item.how_to_learn }}</div>
+    {% endif %}
+    {% else %}
+    {{ item }}
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if gf.get('next_steps') %}
+<p style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.35rem;">Next steps</p>
+<ol style="margin:0 0 0.75rem;padding-left:1.25rem;color:var(--text-muted);font-size:0.88rem;">
+  {% for step in gf.get('next_steps', []) %}
+  <li style="margin-bottom:0.3rem;">{{ step }}</li>
+  {% endfor %}
+</ol>
+{% endif %}
+
+{% if gf.get('interview_tips') %}
+<p style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.35rem;">Interview tips</p>
+<p style="color:var(--text-muted);font-size:0.88rem;margin:0 0 0.75rem;">{{ gf.interview_tips }}</p>
+{% endif %}
+
+{% if gf.get('improvement_potential') %}
+<p style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.35rem;">Improvement potential</p>
+<p style="color:#A78BFA;font-size:0.88rem;margin:0;">{{ gf.improvement_potential }}</p>
+{% endif %}
+
+{% if gf.get('source') %}
+<p style="color:var(--text-muted);font-size:0.75rem;margin-top:0.75rem;opacity:0.7;">Powered by {{ 'Google Gemini' if gf.source == 'gemini' else 'local fallback' }}</p>
+{% endif %}

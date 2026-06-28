@@ -105,7 +105,7 @@ def upload_resume(job_id):
             candidate_name,
             candidate_email,
         )
-        start_background_scoring(current_app._get_current_object(), submission, dest, job)
+        start_background_scoring(current_app, submission, dest, job)
         flash("Resume uploaded. Scoring in progress...", "success")
     except ValueError as exc:
         flash(f"Upload failed: {exc}", "danger")
