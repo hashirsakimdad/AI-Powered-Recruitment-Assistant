@@ -1,3 +1,4 @@
+import logging
 import os
 
 import numpy as np
@@ -5,6 +6,8 @@ import torch
 import torch.nn as nn
 
 from ai.scorer import get_model
+
+logger = logging.getLogger(__name__)
 
 
 class ResumeMatchNetwork(nn.Module):
@@ -50,11 +53,13 @@ def get_neural_score(resume_text: str, job_description: str) -> dict:
         resume_emb = model.encode(resume_text, convert_to_tensor=True)
         job_emb = model.encode(job_description, convert_to_tensor=True)
 
-        combined = torch.cat([resume_emb, job_emb], dim=0).unsqueeze(0)
+        combined = torch.cat(
+            [resume_emb.reshape(-1), job_emb.reshape(-1)], dim=0
+        ).unsqueeze(0)
         weights_path = _weights_path()
 
         if os.path.exists(weights_path):
-            net = ResumeMatchNetwork(input_dim=combined.shape[1])
+            net = ResumeMatchNetwork(input_dim=combined.shape[-1])
             net.load_state_dict(torch.load(weights_path, map_location=torch.device("cpu")))
             net.eval()
 
@@ -63,12 +68,9 @@ def get_neural_score(resume_text: str, job_description: str) -> dict:
 
             source = "neural_network"
         else:
-            from torch.nn.functional import cosine_similarity
+            from sentence_transformers import util
 
-            confidence = cosine_similarity(
-                resume_emb.unsqueeze(0),
-                job_emb.unsqueeze(0),
-            ).item()
+            confidence = float(util.cos_sim(resume_emb, job_emb)[0][0])
             confidence = (confidence + 1) / 2
             source = "cosine_similarity_fallback"
 
@@ -90,7 +92,7 @@ def get_neural_score(resume_text: str, job_description: str) -> dict:
         }
 
     except Exception as e:
-        print(f"Neural classifier error: {e}")
+        logger.warning("Neural classifier error: %s", e, exc_info=True)
         return {
             "confidence": 50.0,
             "label": "Unable to classify",

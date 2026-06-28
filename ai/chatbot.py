@@ -156,13 +156,11 @@ def generate_gemini_feedback(
         )
         response = model.generate_content(prompt)
         raw_text = (response.text or "").strip()
-        print(f"[GEMINI FEEDBACK] Raw model response: {raw_text}")
         logger.info("Gemini raw feedback response: %s", raw_text[:2000])
 
         parsed = parse_llm_json(raw_text)
         return _normalize_gemini_payload(parsed)
     except Exception as exc:
-        print(f"Gemini error: {exc}")
         logger.warning("Gemini feedback failed: %s", exc, exc_info=True)
         fallback = generate_fallback_feedback(score, missing_skills)
         fallback["gemini_error"] = str(exc)
