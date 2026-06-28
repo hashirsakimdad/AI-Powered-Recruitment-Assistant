@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 from werkzeug.utils import secure_filename
 
-from ai import extract_text, generate_feedback, parse_resume, score_candidate
+from ai import analyze_cv_with_llm, extract_text, generate_feedback, parse_resume, score_candidate
 from ai.resume_detector import validate_resume_document
 from models import JobPosting, ResumeSubmission, db
 
@@ -201,14 +201,38 @@ def process_resume(
         "description": job.description,
         "required_skills": job.required_skills,
     }
-    scoring = score_candidate(parsed_profile, job_payload)
+
+    llm_analysis, raw_llm_response = analyze_cv_with_llm(parsed_profile, job_payload)
+    breakdown = llm_analysis.get("scoring_breakdown") or score_candidate(
+        parsed_profile, job_payload
+    )
+    scoring = {
+        **breakdown,
+        "score": llm_analysis["score"],
+        "llm_summary": llm_analysis.get("summary", ""),
+        "llm_strengths": llm_analysis.get("strengths", []),
+        "llm_weaknesses": llm_analysis.get("weaknesses", []),
+        "llm_recommendation": llm_analysis.get("recommendation", ""),
+        "scoring_source": llm_analysis.get("source", "unknown"),
+    }
+    if llm_analysis.get("llm_error"):
+        scoring["llm_error"] = llm_analysis["llm_error"]
+
     feedback = generate_feedback(parsed_profile, job_payload)
+    feedback["llm_analysis"] = {
+        "summary": llm_analysis.get("summary", ""),
+        "strengths": llm_analysis.get("strengths", []),
+        "weaknesses": llm_analysis.get("weaknesses", []),
+        "recommendation": llm_analysis.get("recommendation", ""),
+        "raw_response": raw_llm_response,
+    }
 
     feedback_history = [
         {
             "timestamp": datetime.utcnow().isoformat(),
             "feedback": feedback,
             "score": scoring["score"],
+            "raw_llm_response": raw_llm_response,
         }
     ]
 
@@ -221,6 +245,10 @@ def process_resume(
         ),
         "keyword_match": scoring.get("keyword_match", 0),
         "rationale": scoring.get("rationale", []),
+        "llm_summary": llm_analysis.get("summary", ""),
+        "strengths": llm_analysis.get("strengths", []),
+        "weaknesses": llm_analysis.get("weaknesses", []),
+        "recommendation": llm_analysis.get("recommendation", ""),
     }
 
     if submission is None:
@@ -259,7 +287,16 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         "description": job.description,
         "required_skills": job.required_skills,
     }
-    scoring = score_candidate(parsed_profile, job_payload)
+    llm_analysis, raw_llm_response = analyze_cv_with_llm(parsed_profile, job_payload)
+    breakdown = llm_analysis.get("scoring_breakdown") or score_candidate(
+        parsed_profile, job_payload
+    )
+    scoring = {
+        **breakdown,
+        "score": llm_analysis["score"],
+        "llm_summary": llm_analysis.get("summary", ""),
+        "scoring_source": llm_analysis.get("source", "unknown"),
+    }
     feedback = generate_feedback(parsed_profile, job_payload)
     submission.parsed_summary = parsed_profile
     submission.explanation = {
@@ -271,6 +308,11 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         ),
         "keyword_match": scoring.get("keyword_match", 0),
         "rationale": scoring.get("rationale", []),
+        "llm_summary": llm_analysis.get("summary", ""),
+        "strengths": llm_analysis.get("strengths", []),
+        "weaknesses": llm_analysis.get("weaknesses", []),
+        "recommendation": llm_analysis.get("recommendation", ""),
+        "raw_llm_response": raw_llm_response,
     }
     _apply_scoring_to_submission(submission, scoring)
     submission.scoring_status = "scored"
