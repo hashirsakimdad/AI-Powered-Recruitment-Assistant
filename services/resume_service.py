@@ -302,6 +302,10 @@ def process_resume(
 
     submission.file_path = str(resume_path)
     submission.parsed_summary = parsed_profile
+
+    print(f"Saving explanation: {explanation}")
+    print(f"skill_match value: {explanation.get('skill_match')}")
+
     submission.explanation = explanation
     submission.is_resume_valid = True
     submission.detection_details = detection_details
