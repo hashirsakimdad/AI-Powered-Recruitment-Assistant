@@ -54,6 +54,9 @@ class Config:
         "GROQ_API_URL", "https://api.groq.com/openai/v1/chat/completions"
     )
 
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+
 
 def ensure_instance_dirs():
     uploads = Path(Config.UPLOAD_FOLDER)

@@ -1,8 +1,15 @@
 {% set expl = sub.explanation or {} %}
 {% set scores = expl.get('scores', {}) if expl is mapping else {} %}
+{% set neural = expl.get('neural_match') or scores.get('neural_match') %}
 <div class="mb-2">
   <strong>Score: {{ sub.score|round(1) if sub.score is not none else '—' }}/100</strong>
 </div>
+{% if neural %}
+<div class="mb-2 small">
+  AI Confidence: {{ neural.confidence }}% — {{ neural.label }}
+  {% if neural.color == 'success' %}🟢{% elif neural.color == 'warning' %}🟡{% elif neural.color == 'danger' %}🔴{% endif %}
+</div>
+{% endif %}
 <div class="progress mb-2" style="height: 8px;">
   <div class="progress-bar bg-primary" style="width: {{ sub.score or 0 }}%"></div>
 </div>

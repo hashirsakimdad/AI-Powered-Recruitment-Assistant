@@ -146,11 +146,18 @@ def rescore_in_background(app, submission_id: int, job_id: int) -> None:
             db.session.commit()
 
 
+def _resolve_flask_app(app):
+    """Return real Flask app instance; unwrap LocalProxy inside request context."""
+    unwrap = getattr(app, "_get_current_object", None)
+    return unwrap() if callable(unwrap) else app
+
+
 def start_background_scoring(app, submission: ResumeSubmission, dest: Path, job: JobPosting) -> None:
     """Launch background thread for resume scoring."""
+    app_obj = _resolve_flask_app(app)
     thread = threading.Thread(
         target=score_in_background,
-        args=(app._get_current_object(), submission.id, str(dest), job.id),
+        args=(app_obj, submission.id, str(dest), job.id),
         daemon=True,
     )
     thread.start()
@@ -246,9 +253,16 @@ def process_resume(
         "keyword_match": scoring.get("keyword_match", 0),
         "rationale": scoring.get("rationale", []),
         "llm_summary": llm_analysis.get("summary", ""),
-        "strengths": llm_analysis.get("strengths", []),
+        "strengths": feedback.get("strengths", llm_analysis.get("strengths", [])),
         "weaknesses": llm_analysis.get("weaknesses", []),
         "recommendation": llm_analysis.get("recommendation", ""),
+        "overall_assessment": feedback.get("overall_assessment", ""),
+        "missing_skills": feedback.get("missing_skills", []),
+        "next_steps": feedback.get("next_steps", []),
+        "interview_tips": feedback.get("interview_tips", ""),
+        "improvement_potential": feedback.get("improvement_potential", ""),
+        "feedback_source": feedback.get("source", "unknown"),
+        "neural_match": scoring.get("neural_match"),
     }
 
     if submission is None:
@@ -309,10 +323,17 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         "keyword_match": scoring.get("keyword_match", 0),
         "rationale": scoring.get("rationale", []),
         "llm_summary": llm_analysis.get("summary", ""),
-        "strengths": llm_analysis.get("strengths", []),
+        "strengths": feedback.get("strengths", []),
         "weaknesses": llm_analysis.get("weaknesses", []),
         "recommendation": llm_analysis.get("recommendation", ""),
+        "overall_assessment": feedback.get("overall_assessment", ""),
+        "missing_skills": feedback.get("missing_skills", []),
+        "next_steps": feedback.get("next_steps", []),
+        "interview_tips": feedback.get("interview_tips", ""),
+        "improvement_potential": feedback.get("improvement_potential", ""),
+        "feedback_source": feedback.get("source", "unknown"),
         "raw_llm_response": raw_llm_response,
+        "neural_match": scoring.get("neural_match"),
     }
     _apply_scoring_to_submission(submission, scoring)
     submission.scoring_status = "scored"
