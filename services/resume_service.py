@@ -243,13 +243,20 @@ def process_resume(
         }
     ]
 
+    # Ensure UI percentages are always consistent with score components.
+    # (Some older/LLM-only scoring payloads may omit precomputed percentages.)
+    keyword_score = float(scoring.get("keyword_score") or 0.0)
+    experience_score = float(scoring.get("experience_score") or 0.0)
+    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 2) if keyword_score else 0.0
+    scoring["experience_match"] = (
+        round((experience_score / 15.0) * 100.0, 2) if experience_score else 0.0
+    )
+
     explanation = {
         "scores": scoring,
         "feedback": feedback,
-        "skill_match": scoring.get("skill_match", scoring.get("skill_alignment", 0)),
-        "experience_match": scoring.get(
-            "experience_match", scoring.get("experience_bonus", 0)
-        ),
+        "skill_match": scoring["skill_match"],
+        "experience_match": scoring["experience_match"],
         "keyword_match": scoring.get("keyword_match", 0),
         "rationale": scoring.get("rationale", []),
         "llm_summary": llm_analysis.get("summary", ""),
@@ -312,14 +319,20 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         "scoring_source": llm_analysis.get("source", "unknown"),
     }
     feedback = generate_feedback(parsed_profile, job_payload)
+
+    keyword_score = float(scoring.get("keyword_score") or 0.0)
+    experience_score = float(scoring.get("experience_score") or 0.0)
+    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 2) if keyword_score else 0.0
+    scoring["experience_match"] = (
+        round((experience_score / 15.0) * 100.0, 2) if experience_score else 0.0
+    )
+
     submission.parsed_summary = parsed_profile
     submission.explanation = {
         "scores": scoring,
         "feedback": feedback,
-        "skill_match": scoring.get("skill_match", scoring.get("skill_alignment", 0)),
-        "experience_match": scoring.get(
-            "experience_match", scoring.get("experience_bonus", 0)
-        ),
+        "skill_match": scoring["skill_match"],
+        "experience_match": scoring["experience_match"],
         "keyword_match": scoring.get("keyword_match", 0),
         "rationale": scoring.get("rationale", []),
         "llm_summary": llm_analysis.get("summary", ""),
