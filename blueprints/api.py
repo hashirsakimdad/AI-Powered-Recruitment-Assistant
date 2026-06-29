@@ -3,6 +3,7 @@ import json
 from flask import Blueprint, abort, jsonify, session
 
 from blueprints.auth_utils import login_required, role_required
+from extensions import limiter
 from models import JobPosting, ResumeSubmission, db
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -29,6 +30,7 @@ def api_submissions(job_id):
 
 @api_bp.route("/submission/<int:submission_id>/status")
 @login_required
+@limiter.limit("60 per minute", override_defaults=True)
 def submission_status(submission_id):
     sub = db.session.get(ResumeSubmission, submission_id)
     if sub is None:

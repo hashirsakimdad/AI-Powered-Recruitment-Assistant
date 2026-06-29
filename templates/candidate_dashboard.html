@@ -61,7 +61,7 @@
         <h2 style="font-size:1.1rem;font-weight:600;margin:0 0 1rem;">My Applications</h2>
         {% if submissions %}
           {% for sub in submissions %}
-            <div style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-lg);padding:1rem 1.5rem;margin-bottom:1rem;">
+            <div data-submission-id="{{ sub.id }}" style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-lg);padding:1rem 1.5rem;margin-bottom:1rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
                 <div>
                   <div style="font-weight:600;font-size:0.95rem;">{{ sub.job.title if sub.job else 'Application' }}</div>
@@ -74,7 +74,7 @@
                 </div>
                 <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
                   {% if sub.scoring_status == 'processing' %}
-                  <span id="score-badge-{{ sub.id }}" class="status-badge status-under_review">⏳ Scoring in progress...</span>
+                  <span id="score-badge-{{ sub.id }}" class="score-badge status-badge status-under_review">⏳ Scoring in progress...</span>
                   {% elif sub.scoring_status == 'failed' %}
                   <span id="score-badge-{{ sub.id }}" class="score-badge score-low">Scoring failed — try re-uploading</span>
                   {% elif sub.score is not none %}
@@ -282,48 +282,11 @@
     }
     initMobileNav();
     window.addEventListener('resize', initMobileNav);
-
+  </script>
+  <script src="{{ url_for('static', filename='js/scoring-poll.js') }}"></script>
+  <script>
     const processingIds = [{% for sub in submissions if sub.scoring_status == 'processing' %}{{ sub.id }}{% if not loop.last %},{% endif %}{% endfor %}];
-    function scoreBadgeClass(score) {
-      if (score >= 80) return 'score-badge score-high';
-      if (score >= 60) return 'score-badge score-medium';
-      return 'score-badge score-low';
-    }
-    function pollScores() {
-      processingIds.slice().forEach(id => {
-        fetch('/api/submission/' + id + '/status')
-          .then(r => r.json())
-          .then(data => {
-            console.log('[CV SCORING] Poll status for submission', id, data);
-            const el = document.getElementById('score-badge-' + id);
-            if (data.scoring_status === 'scored' && data.score != null) {
-              if (el) {
-                const score = Number(data.score);
-                el.className = scoreBadgeClass(score);
-                el.textContent = 'Score: ' + score.toFixed(1) + '/100';
-              }
-              const idx = processingIds.indexOf(id);
-              if (idx !== -1) processingIds.splice(idx, 1);
-              if (processingIds.length === 0 && pollTimer) clearInterval(pollTimer);
-            } else if (data.scoring_status === 'failed') {
-              if (el) {
-                el.className = 'score-badge score-low';
-                el.textContent = data.error
-                  ? 'Scoring failed: ' + data.error
-                  : 'Scoring failed — try re-uploading';
-              }
-              const idx = processingIds.indexOf(id);
-              if (idx !== -1) processingIds.splice(idx, 1);
-              if (processingIds.length === 0 && pollTimer) clearInterval(pollTimer);
-            }
-          })
-          .catch(err => console.error('[CV SCORING] Poll error for submission', id, err));
-      });
-    }
-    let pollTimer = null;
-    if (processingIds.length) {
-      pollTimer = setInterval(pollScores, 3000);
-    }
+    initScoringPoll(processingIds);
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

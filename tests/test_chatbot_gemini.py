@@ -11,7 +11,8 @@ def test_fallback_feedback_shape():
     assert result["source"] == "fallback"
 
 
-def test_generate_feedback_without_api_key():
+def test_generate_feedback_without_api_key(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "")
     profile = {
         "raw_text": "Python developer with Flask experience. 3 years of experience.",
         "skills": ["Python", "Flask"],
