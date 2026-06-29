@@ -243,51 +243,35 @@ def process_resume(
         }
     ]
 
-    # Ensure UI percentages are always consistent with score components.
-    # Store both raw component scores and derived percentages in explanation.
-    keyword_score = float(scoring.get("keyword_score") or 0.0)
-    semantic_score = float(scoring.get("semantic_score") or 0.0)
+    keyword_score   = float(scoring.get("keyword_score") or 0.0)
+    semantic_score  = float(scoring.get("semantic_score") or 0.0)
     experience_score = float(scoring.get("experience_score") or 0.0)
-    format_score = float(scoring.get("format_score") or 0.0)
+    format_score    = float(scoring.get("format_score") or 0.0)
 
-    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 1) if keyword_score else 0.0
-    scoring["experience_match"] = (
-        round((experience_score / 15.0) * 100.0, 1) if experience_score else 0.0
-    )
-    scoring["keyword_match"] = round((semantic_score / 35.0) * 100.0, 1) if semantic_score else 0.0
+    skill_match      = round((keyword_score / 40.0) * 100.0, 1)
+    experience_match = round((experience_score / 15.0) * 100.0, 1)
+    print(f"[DEBUG] keyword_score={keyword_score}")
+    print(f"[DEBUG] experience_score={experience_score}")
+    print(f"[DEBUG] skill_gap={scoring.get('skill_gap', [])}")
+    print(f"[DEBUG] skill_match={skill_match}, experience_match={experience_match}")
+    keyword_match    = round((semantic_score / 35.0) * 100.0, 1)
 
-    logger.info("skill_match: %.1f%%", (keyword_score / 40.0) * 100.0 if keyword_score else 0.0)
-    logger.info(
-        "experience_match: %.1f%%",
-        (experience_score / 15.0) * 100.0 if experience_score else 0.0,
-    )
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("DEBUG skill_match=%.1f keyword_score=%.1f", skill_match, keyword_score)
+    logger.info("DEBUG experience_match=%.1f experience_score=%.1f", experience_match, experience_score)
 
-    # Explanation schema for UI (top-level keys expected by templates)
     explanation = {
-        "keyword_score": keyword_score,
-        "semantic_score": semantic_score,
+        "keyword_score":    keyword_score,
+        "semantic_score":   semantic_score,
         "experience_score": experience_score,
-        "format_score": format_score,
-        "skill_match": scoring["skill_match"],
-        "experience_match": scoring["experience_match"],
-        "keyword_match": scoring["keyword_match"],
-        "skill_gap": scoring.get("skill_gap", []),
-        "rationale": scoring.get("rationale", []),
-        # Additional context (safe for templates/APIs to use if present)
-        "scores": scoring,
-        "feedback": feedback,
-        "llm_summary": llm_analysis.get("summary", ""),
-        "strengths": feedback.get("strengths", llm_analysis.get("strengths", [])),
-        "weaknesses": llm_analysis.get("weaknesses", []),
-        "recommendation": llm_analysis.get("recommendation", ""),
-        "overall_assessment": feedback.get("overall_assessment", ""),
-        "missing_skills": feedback.get("missing_skills", []),
-        "next_steps": feedback.get("next_steps", []),
-        "interview_tips": feedback.get("interview_tips", ""),
-        "improvement_potential": feedback.get("improvement_potential", ""),
-        "feedback_source": feedback.get("source", "unknown"),
-        "neural_match": scoring.get("neural_match"),
-        "predicted_category": scoring.get("predicted_category"),
+        "format_score":     format_score,
+        "skill_match":      skill_match,
+        "experience_match": experience_match,
+        "keyword_match":    keyword_match,
+        "skill_gap":        scoring.get("skill_gap", []),
+        "rationale":        scoring.get("rationale", []),
+        "feedback":         feedback,
     }
 
     if submission is None:

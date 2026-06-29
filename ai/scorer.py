@@ -64,31 +64,18 @@ def normalize_score(raw: float, min_val: float = 0.0, max_val: float = 1.0) -> f
     return round((clamped - min_val) / (max_val - min_val) * 100, 1)
 
 
-def compute_keyword_score(resume_text: str, required_skills_str: str) -> float:
-    """
-    Case-insensitive partial match.
-    Max contribution capped at 40 points.
-    """
+def compute_keyword_score(resume_text: str, required_skills: str) -> float:
+    # Smart split: handle comma-separated OR space-separated skills
+    raw = required_skills.strip()
+    if "," in raw:
+        required = [s.strip().lower() for s in raw.split(",") if s.strip()]
+    else:
+        required = [s.strip().lower() for s in raw.split() if s.strip()]
+    if not required:
+        return 0.0
     resume_lower = resume_text.lower()
-    skills = [s.strip().lower() for s in required_skills_str.split(",") if s.strip()]
-    if not skills:
-        return 0.0
-
-    total_weight = 0.0
-    matched_weight = 0.0
-
-    for skill in skills:
-        category = SKILL_CATEGORIES.get(skill, "domain")
-        weight = SKILL_WEIGHTS.get(category, 1.0)
-        total_weight += weight
-        if skill in resume_lower:
-            matched_weight += weight
-
-    if total_weight == 0:
-        return 0.0
-
-    raw_ratio = matched_weight / total_weight
-    return min(40.0, raw_ratio * 40.0)
+    matched = sum(1 for skill in required if skill in resume_lower)
+    return round((matched / len(required)) * 40.0, 1)
 
 
 def compute_semantic_score(resume_text: str, job_description: str) -> float:
@@ -113,44 +100,45 @@ def compute_semantic_score(resume_text: str, job_description: str) -> float:
         return round(min(35.0, overlap * 35.0), 1)
 
 
-def compute_experience_score(resume_text: str) -> float:
-    """Award points for years of experience mentions. Max 15 points."""
-    def detect_experience_years(resume_text: str) -> float:
-        text = resume_text.lower()
-        years_found = []
-        patterns = [
-            r'(\d+)\+?\s*years?\s*(?:of\s*)?experience',
-            r'(\d+)\+?\s*yrs?\s*(?:of\s*)?experience',
-            r'experience\s*(?:of\s*)?(\d+)\+?\s*years?',
-            r'(\d+)\+?\s*years?\s*(?:in|of|with)',
-        ]
-        for pattern in patterns:
-            for match in re.findall(pattern, text):
-                try:
-                    val = float(match)
-                    if val < 50:
-                        years_found.append(val)
-                except:
-                    pass
-        internship_count = len(re.findall(r'intern(?:ship)?', text))
-        if internship_count > 0:
-            years_found.append(internship_count * 0.5)
-        for pm in re.findall(r'(\d+)\s*projects?', text):
+def detect_experience_years(resume_text: str) -> float:
+    text = resume_text.lower()
+    years_found = []
+    patterns = [
+        r'(\d+)\+?\s*years?\s*(?:of\s*)?experience',
+        r'(\d+)\+?\s*yrs?\s*(?:of\s*)?experience',
+        r'experience\s*(?:of\s*)?(\d+)\+?\s*years?',
+        r'(\d+)\+?\s*years?\s*(?:in|of|with)',
+    ]
+    for pattern in patterns:
+        for match in re.findall(pattern, text):
             try:
-                years_found.append(int(pm) * 0.25)
+                val = float(match)
+                if val < 50:
+                    years_found.append(val)
             except:
                 pass
-        return max(years_found) if years_found else 0.0
+    internship_count = len(re.findall(r'intern(?:ship)?', text))
+    if internship_count > 0:
+        years_found.append(internship_count * 0.5)
+    for pm in re.findall(r'(\d+)\s*projects?', text):
+        try:
+            years_found.append(int(pm) * 0.25)
+        except:
+            pass
+    return max(years_found) if years_found else 0.0
 
-    def score_experience(years: float) -> float:
-        if years >= 8:   return 15.0
-        if years >= 5:   return 10.0
-        if years >= 3:   return 7.0
-        if years >= 1:   return 4.0
-        if years >= 0.5: return 2.0
-        if years > 0:    return 1.0
-        return 0.0
 
+def score_experience(years: float) -> float:
+    if years >= 8:   return 15.0
+    if years >= 5:   return 10.0
+    if years >= 3:   return 7.0
+    if years >= 1:   return 4.0
+    if years >= 0.5: return 2.0
+    if years > 0:    return 1.0
+    return 0.0
+
+
+def compute_experience_score(resume_text: str) -> float:
     years = detect_experience_years(resume_text)
     return score_experience(years)
 
@@ -226,8 +214,13 @@ def score(resume_text: str, job) -> Dict[str, Union[float, str, List[str]]]:
     raw_total = keyword_score + semantic_score + experience_score + format_score
     total = apply_length_regularization(min(100.0, raw_total), resume_text)
 
-    required = [s.strip().lower() for s in required_skills.split(",") if s.strip()]
-    missing = [s for s in required if s not in resume_text.lower()]
+    raw = required_skills.strip()
+    if "," in raw:
+        required = [s.strip().lower() for s in raw.split(",") if s.strip()]
+    else:
+        required = [s.strip().lower() for s in raw.split() if s.strip()]
+    resume_lower = resume_text.lower()
+    missing = [skill for skill in required if skill not in resume_lower]
 
     job_title = getattr(job, "title", "") or ""
     job_description = f"{job_title} {description} {required_skills}".strip()
