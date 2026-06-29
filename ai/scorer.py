@@ -115,25 +115,44 @@ def compute_semantic_score(resume_text: str, job_description: str) -> float:
 
 def compute_experience_score(resume_text: str) -> float:
     """Award points for years of experience mentions. Max 15 points."""
-    patterns = [
-        r"(\d+)\+?\s*years?\s*of\s*experience",
-        r"(\d+)\+?\s*yrs?\s*experience",
-        r"experience\s*of\s*(\d+)\+?\s*years?",
-    ]
-    years = 0
-    for pattern in patterns:
-        matches = re.findall(pattern, resume_text.lower())
-        if matches:
-            years = max(years, max(int(m) for m in matches))
-    if years >= 8:
-        return 15.0
-    if years >= 5:
-        return 10.0
-    if years >= 3:
-        return 7.0
-    if years >= 1:
-        return 4.0
-    return 0.0
+    def detect_experience_years(resume_text: str) -> float:
+        text = resume_text.lower()
+        years_found = []
+        patterns = [
+            r'(\d+)\+?\s*years?\s*(?:of\s*)?experience',
+            r'(\d+)\+?\s*yrs?\s*(?:of\s*)?experience',
+            r'experience\s*(?:of\s*)?(\d+)\+?\s*years?',
+            r'(\d+)\+?\s*years?\s*(?:in|of|with)',
+        ]
+        for pattern in patterns:
+            for match in re.findall(pattern, text):
+                try:
+                    val = float(match)
+                    if val < 50:
+                        years_found.append(val)
+                except:
+                    pass
+        internship_count = len(re.findall(r'intern(?:ship)?', text))
+        if internship_count > 0:
+            years_found.append(internship_count * 0.5)
+        for pm in re.findall(r'(\d+)\s*projects?', text):
+            try:
+                years_found.append(int(pm) * 0.25)
+            except:
+                pass
+        return max(years_found) if years_found else 0.0
+
+    def score_experience(years: float) -> float:
+        if years >= 8:   return 15.0
+        if years >= 5:   return 10.0
+        if years >= 3:   return 7.0
+        if years >= 1:   return 4.0
+        if years >= 0.5: return 2.0
+        if years > 0:    return 1.0
+        return 0.0
+
+    years = detect_experience_years(resume_text)
+    return score_experience(years)
 
 
 def get_job_classifier() -> Tuple[Any, Any, Optional[List[str]]]:
