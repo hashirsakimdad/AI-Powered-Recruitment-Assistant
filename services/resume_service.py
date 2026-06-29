@@ -281,9 +281,6 @@ def process_resume(
     submission.file_path = str(resume_path)
     submission.parsed_summary = parsed_profile
 
-    print(f"Saving explanation: {explanation}")
-    print(f"skill_match value: {explanation.get('skill_match')}")
-
     submission.explanation = explanation
     submission.is_resume_valid = True
     submission.detection_details = detection_details
@@ -364,9 +361,6 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         "neural_match": scoring.get("neural_match"),
         "predicted_category": scoring.get("predicted_category"),
     }
-
-    print(f"Saving explanation: {explanation}")
-    print(f"skill_match value: {explanation.get('skill_match')}")
 
     submission.explanation = explanation
     _apply_scoring_to_submission(submission, scoring)
