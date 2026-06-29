@@ -15,6 +15,18 @@ def test_build_scoring_prompt_no_keyerror():
     assert '"score": 78' in prompt
 
 
+def test_build_scoring_prompt_escapes_user_braces():
+    profile = {"raw_text": "Skills: {python}"}
+    job = {
+        "title": "Role {senior}",
+        "required_skills": "Python",
+        "description": "Build {APIs}.",
+    }
+    prompt = build_scoring_prompt(profile, job)
+    assert "Role (senior)" in prompt
+    assert "(python)" in prompt
+    assert "(APIs)" in prompt
+
 def test_build_scoring_prompt_truncates_long_resume():
     profile = {"raw_text": "x" * 20000}
     job = {"title": "Role", "required_skills": "", "description": ""}

@@ -13,7 +13,7 @@ from .scorer import score_candidate
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 GEMINI_FEEDBACK_PROMPT = """You are an expert HR consultant and career coach.
 Analyze this resume against the job requirements and give detailed, actionable feedback.
