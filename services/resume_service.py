@@ -250,16 +250,10 @@ def process_resume(
 
     skill_match      = round((keyword_score / 40.0) * 100.0, 1)
     experience_match = round((experience_score / 15.0) * 100.0, 1)
-    print(f"[DEBUG] keyword_score={keyword_score}")
-    print(f"[DEBUG] experience_score={experience_score}")
-    print(f"[DEBUG] skill_gap={scoring.get('skill_gap', [])}")
-    print(f"[DEBUG] skill_match={skill_match}, experience_match={experience_match}")
+    logger.info("skill_match=%.1f keyword_score=%.1f", skill_match, keyword_score)
+    logger.info("experience_match=%.1f experience_score=%.1f", experience_match, experience_score)
+    logger.debug("skill_gap=%s", scoring.get("skill_gap", []))
     keyword_match    = round((semantic_score / 35.0) * 100.0, 1)
-
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info("DEBUG skill_match=%.1f keyword_score=%.1f", skill_match, keyword_score)
-    logger.info("DEBUG experience_match=%.1f experience_score=%.1f", experience_match, experience_score)
 
     explanation = {
         "keyword_score":    keyword_score,

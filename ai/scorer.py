@@ -65,17 +65,35 @@ def normalize_score(raw: float, min_val: float = 0.0, max_val: float = 1.0) -> f
 
 
 def compute_keyword_score(resume_text: str, required_skills: str) -> float:
-    # Smart split: handle comma-separated OR space-separated skills
+    """
+    Weighted keyword match. Max 40 points.
+    Handles both comma-separated and space-separated required_skills strings.
+    """
     raw = required_skills.strip()
     if "," in raw:
-        required = [s.strip().lower() for s in raw.split(",") if s.strip()]
+        skills = [s.strip().lower() for s in raw.split(",") if s.strip()]
     else:
-        required = [s.strip().lower() for s in raw.split() if s.strip()]
-    if not required:
+        skills = [s.strip().lower() for s in raw.split() if s.strip()]
+
+    if not skills:
         return 0.0
+
     resume_lower = resume_text.lower()
-    matched = sum(1 for skill in required if skill in resume_lower)
-    return round((matched / len(required)) * 40.0, 1)
+    total_weight = 0.0
+    matched_weight = 0.0
+
+    for skill in skills:
+        category = SKILL_CATEGORIES.get(skill, "domain")
+        weight = SKILL_WEIGHTS.get(category, 1.0)
+        total_weight += weight
+        if skill in resume_lower:
+            matched_weight += weight
+
+    if total_weight == 0:
+        return 0.0
+
+    raw_ratio = matched_weight / total_weight
+    return min(40.0, raw_ratio * 40.0)
 
 
 def compute_semantic_score(resume_text: str, job_description: str) -> float:
