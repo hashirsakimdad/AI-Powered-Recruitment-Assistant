@@ -24,9 +24,9 @@
 <p class="small text-muted">{{ expl.get('llm_summary') }}</p>
 {% endif %}
 <table class="table table-sm table-bordered" style="font-size:0.85rem;">
-  <tr><th>Skill Match</th><td>{{ expl.get('skill_match', scores.get('skill_match', '—')) }}%</td></tr>
-  <tr><th>Experience Match</th><td>{{ expl.get('experience_match', scores.get('experience_match', '—')) }}%</td></tr>
-  <tr><th>Keyword Match</th><td>{{ expl.get('keyword_match', scores.get('keyword_match', '—')) }}%</td></tr>
+  <tr><th>Skill Match</th><td>{{ sub.explanation.skill_match if sub.explanation is mapping else scores.get('skill_match', '—') }}%</td></tr>
+  <tr><th>Experience Match</th><td>{{ sub.explanation.experience_match if sub.explanation is mapping else scores.get('experience_match', '—') }}%</td></tr>
+  <tr><th>Keyword Match</th><td>{{ sub.explanation.keyword_match if sub.explanation is mapping else scores.get('keyword_match', '—') }}%</td></tr>
 </table>
 {% set strengths = expl.get('strengths', []) if expl is mapping else [] %}
 {% if strengths %}
