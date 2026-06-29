@@ -244,21 +244,32 @@ def process_resume(
     ]
 
     # Ensure UI percentages are always consistent with score components.
-    # (Some older/LLM-only scoring payloads may omit precomputed percentages.)
+    # Store both raw component scores and derived percentages in explanation.
     keyword_score = float(scoring.get("keyword_score") or 0.0)
+    semantic_score = float(scoring.get("semantic_score") or 0.0)
     experience_score = float(scoring.get("experience_score") or 0.0)
-    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 2) if keyword_score else 0.0
-    scoring["experience_match"] = (
-        round((experience_score / 15.0) * 100.0, 2) if experience_score else 0.0
-    )
+    format_score = float(scoring.get("format_score") or 0.0)
 
+    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 1) if keyword_score else 0.0
+    scoring["experience_match"] = (
+        round((experience_score / 15.0) * 100.0, 1) if experience_score else 0.0
+    )
+    scoring["keyword_match"] = round((semantic_score / 35.0) * 100.0, 1) if semantic_score else 0.0
+
+    # Explanation schema for UI (top-level keys expected by templates)
     explanation = {
-        "scores": scoring,
-        "feedback": feedback,
+        "keyword_score": keyword_score,
+        "semantic_score": semantic_score,
+        "experience_score": experience_score,
+        "format_score": format_score,
         "skill_match": scoring["skill_match"],
         "experience_match": scoring["experience_match"],
-        "keyword_match": scoring.get("keyword_match", 0),
+        "keyword_match": scoring["keyword_match"],
+        "skill_gap": scoring.get("skill_gap", []),
         "rationale": scoring.get("rationale", []),
+        # Additional context (safe for templates/APIs to use if present)
+        "scores": scoring,
+        "feedback": feedback,
         "llm_summary": llm_analysis.get("summary", ""),
         "strengths": feedback.get("strengths", llm_analysis.get("strengths", [])),
         "weaknesses": llm_analysis.get("weaknesses", []),
@@ -270,6 +281,7 @@ def process_resume(
         "improvement_potential": feedback.get("improvement_potential", ""),
         "feedback_source": feedback.get("source", "unknown"),
         "neural_match": scoring.get("neural_match"),
+        "predicted_category": scoring.get("predicted_category"),
     }
 
     if submission is None:
@@ -321,20 +333,29 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
     feedback = generate_feedback(parsed_profile, job_payload)
 
     keyword_score = float(scoring.get("keyword_score") or 0.0)
+    semantic_score = float(scoring.get("semantic_score") or 0.0)
     experience_score = float(scoring.get("experience_score") or 0.0)
-    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 2) if keyword_score else 0.0
+    format_score = float(scoring.get("format_score") or 0.0)
+
+    scoring["skill_match"] = round((keyword_score / 40.0) * 100.0, 1) if keyword_score else 0.0
     scoring["experience_match"] = (
-        round((experience_score / 15.0) * 100.0, 2) if experience_score else 0.0
+        round((experience_score / 15.0) * 100.0, 1) if experience_score else 0.0
     )
+    scoring["keyword_match"] = round((semantic_score / 35.0) * 100.0, 1) if semantic_score else 0.0
 
     submission.parsed_summary = parsed_profile
     submission.explanation = {
-        "scores": scoring,
-        "feedback": feedback,
+        "keyword_score": keyword_score,
+        "semantic_score": semantic_score,
+        "experience_score": experience_score,
+        "format_score": format_score,
         "skill_match": scoring["skill_match"],
         "experience_match": scoring["experience_match"],
-        "keyword_match": scoring.get("keyword_match", 0),
+        "keyword_match": scoring["keyword_match"],
+        "skill_gap": scoring.get("skill_gap", []),
         "rationale": scoring.get("rationale", []),
+        "scores": scoring,
+        "feedback": feedback,
         "llm_summary": llm_analysis.get("summary", ""),
         "strengths": feedback.get("strengths", []),
         "weaknesses": llm_analysis.get("weaknesses", []),
@@ -347,6 +368,7 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         "feedback_source": feedback.get("source", "unknown"),
         "raw_llm_response": raw_llm_response,
         "neural_match": scoring.get("neural_match"),
+        "predicted_category": scoring.get("predicted_category"),
     }
     _apply_scoring_to_submission(submission, scoring)
     submission.scoring_status = "scored"
