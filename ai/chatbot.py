@@ -1,68 +1,24 @@
-"""AI-powered feedback generation using Google Gemini."""
+"""AI-powered feedback generation using Groq."""
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from typing import Any, Dict, List
 
 from .feedback_validator import validate_feedback_against_resume
-from .llm_parser import parse_llm_json
 from .scorer import score_candidate
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-
-GEMINI_FEEDBACK_PROMPT = """You are an expert HR consultant and career coach.
-Analyze this resume against the job requirements and give detailed, actionable feedback.
-
-JOB REQUIRED SKILLS: {required_skills}
-MISSING SKILLS: {missing_skills}
-OVERALL SCORE: {score:.1f}/100
-KEYWORD MATCH: {keyword_score:.1f}/40
-SEMANTIC SCORE: {semantic_score:.1f}/35
-EXPERIENCE SCORE: {experience_score:.1f}/15
-RESUME EXCERPT: {resume_excerpt}
-
-Respond ONLY in this exact JSON format, no other text:
-{{
-    "overall_assessment": "2-3 sentence honest assessment",
-    "strengths": ["strength 1", "strength 2", "strength 3"],
-    "missing_skills": [
-        {{
-            "skill": "skill name",
-            "importance": "high/medium/low",
-            "how_to_learn": "specific resource or course"
-        }}
-    ],
-    "next_steps": ["action 1", "action 2", "action 3"],
-    "interview_tips": "2 sentence tip specific to this role",
-    "improvement_potential": "what score they could reach if gaps fixed"
-}}
-"""
-
-
-def _configure_gemini() -> bool:
-    api_key = os.getenv("GOOGLE_API_KEY", "").strip()
-    if not api_key:
-        return False
-    try:
-        import google.generativeai as genai
-
-        genai.configure(api_key=api_key)
-        return True
-    except Exception as exc:
-        logger.warning("Gemini configure failed: %s", exc)
-        return False
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
 def generate_fallback_feedback(
     score: float,
     missing_skills: List[str],
 ) -> Dict[str, Any]:
-    """Fallback if Gemini is unavailable."""
+    """Fallback if Groq is unavailable."""
     if score >= 70:
         assessment = f"Score: {score:.1f}/100. Strong match!"
     elif score >= 50:
@@ -92,79 +48,38 @@ def generate_fallback_feedback(
     }
 
 
-def _normalize_gemini_payload(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Ensure Gemini response has expected types."""
-    missing = data.get("missing_skills") or []
-    normalized_missing = []
-    for item in missing:
-        if isinstance(item, dict):
-            normalized_missing.append(
-                {
-                    "skill": str(item.get("skill", "")).strip(),
-                    "importance": str(item.get("importance", "medium")).strip().lower(),
-                    "how_to_learn": str(item.get("how_to_learn", "")).strip(),
-                }
-            )
-        elif item:
-            normalized_missing.append(
-                {
-                    "skill": str(item).strip(),
-                    "importance": "medium",
-                    "how_to_learn": "Explore online tutorials and hands-on projects.",
-                }
-            )
-
-    return {
-        "overall_assessment": str(data.get("overall_assessment", "")).strip(),
-        "strengths": [str(s).strip() for s in (data.get("strengths") or []) if str(s).strip()],
-        "missing_skills": normalized_missing,
-        "next_steps": [str(s).strip() for s in (data.get("next_steps") or []) if str(s).strip()],
-        "interview_tips": str(data.get("interview_tips", "")).strip(),
-        "improvement_potential": str(data.get("improvement_potential", "")).strip(),
-        "source": "gemini",
-    }
-
-
-def generate_gemini_feedback(
-    score: float,
-    keyword_score: float,
-    semantic_score: float,
-    experience_score: float,
-    required_skills: List[str],
-    resume_text: str,
-    missing_skills: List[str],
-) -> Dict[str, Any]:
-    """Call Google Gemini 1.5 Flash for structured feedback JSON."""
-    if not os.getenv("GOOGLE_API_KEY", "").strip():
-        return generate_fallback_feedback(score, missing_skills)
-
-    if not _configure_gemini():
-        return generate_fallback_feedback(score, missing_skills)
-
+def generate_groq_feedback(profile, job, scoring):
     try:
-        import google.generativeai as genai
+        from groq import Groq
 
-        model = genai.GenerativeModel(GEMINI_MODEL)
-        prompt = GEMINI_FEEDBACK_PROMPT.format(
-            required_skills=", ".join(required_skills) or "Not specified",
-            missing_skills=", ".join(missing_skills) or "None identified",
-            score=score,
-            keyword_score=keyword_score,
-            semantic_score=semantic_score,
-            experience_score=experience_score,
-            resume_excerpt=(resume_text or "")[:800],
+        api_key = os.getenv("GROQ_API_KEY", "").strip()
+        if not api_key:
+            return None
+
+        gaps = scoring.get("skill_gap", [])
+        score = scoring.get("score", 0)
+
+        client = Groq(api_key=api_key)
+        prompt = f"""You are a career coach giving resume feedback.
+
+Job Title: {job.get('title', 'Role')}
+Required Skills: {job.get('required_skills', '')}
+Candidate Score: {score}/100
+Missing Skills: {', '.join(gaps[:5]) if gaps else 'None'}
+
+Write 3-4 sentences of specific, actionable feedback.
+Tell them exactly what to improve and how."""
+
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=300,
         )
-        response = model.generate_content(prompt)
-        raw_text = (response.text or "").strip()
-        logger.info("Gemini raw feedback response: %s", raw_text[:2000])
-
-        parsed = parse_llm_json(raw_text)
-        return _normalize_gemini_payload(parsed)
-    except Exception as exc:
-        logger.warning("Gemini feedback failed: %s", exc, exc_info=True)
-        fallback = generate_fallback_feedback(score, missing_skills)
-        fallback["gemini_error"] = str(exc)
-        return fallback
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.warning("Groq feedback failed: %s", e)
+        return None
 
 
 def _missing_skill_names(missing_skills: List[Any]) -> List[str]:
@@ -181,11 +96,7 @@ def _missing_skill_names(missing_skills: List[Any]) -> List[str]:
 
 def generate_feedback(profile: Dict, job: Dict[str, str]) -> Dict[str, Any]:
     """
-    Generate personalized feedback via Gemini (with rule-based fallback).
-
-    Returns a dict compatible with existing templates and validators, including
-    Gemini fields: overall_assessment, strengths, missing_skills, next_steps,
-    interview_tips, improvement_potential.
+    Generate personalized feedback via Groq (with rule-based fallback).
     """
     scoring = score_candidate(profile, job)
     overall_score = float(scoring.get("score", 0))
@@ -205,24 +116,35 @@ def generate_feedback(profile: Dict, job: Dict[str, str]) -> Dict[str, Any]:
                 resume_skills.add(token)
     missing = sorted(required_lower - resume_skills)
 
-    gemini_data = generate_gemini_feedback(
-        score=overall_score,
-        keyword_score=keyword_score,
-        semantic_score=semantic_score,
-        experience_score=experience_score,
-        required_skills=required_skills,
-        resume_text=profile.get("raw_text", ""),
-        missing_skills=missing,
-    )
+    groq_text = generate_groq_feedback(profile, job, scoring)
+    if groq_text:
+        feedback_data = {
+            "overall_assessment": groq_text.strip(),
+            "strengths": [],
+            "missing_skills": [
+                {
+                    "skill": skill,
+                    "importance": "high",
+                    "how_to_learn": "Explore tutorials and hands-on projects.",
+                }
+                for skill in missing[:3]
+            ],
+            "next_steps": [],
+            "interview_tips": "",
+            "improvement_potential": "",
+            "source": "groq",
+        }
+    else:
+        feedback_data = generate_fallback_feedback(overall_score, missing)
 
-    suggestions = gemini_data.get("next_steps", [])
-    summary = gemini_data.get("overall_assessment", "")
+    suggestions = feedback_data.get("next_steps", [])
+    summary = feedback_data.get("overall_assessment", "")
 
     feedback: Dict[str, Any] = {
-        **gemini_data,
+        **feedback_data,
         "summary": summary,
         "suggestions": suggestions,
-        "missing_skills": gemini_data.get("missing_skills", []),
+        "missing_skills": feedback_data.get("missing_skills", []),
         "score_breakdown": {
             "overall_score": overall_score,
             "keyword_score": keyword_score,

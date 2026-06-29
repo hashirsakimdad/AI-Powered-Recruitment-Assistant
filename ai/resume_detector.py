@@ -4,12 +4,13 @@ Pre-processing step to determine if an uploaded document is a CV/Resume.
 Uses trained ML model for accurate detection (100% accuracy).
 Falls back to rule-based detection if model not available.
 """
+import pickle
 import re
 from pathlib import Path
 from typing import Dict, Tuple, Optional
 
-import numpy as np
 import joblib
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
@@ -40,11 +41,16 @@ def _load_detector_model() -> Optional[dict]:
     model_path = Path(__file__).parent.parent / "training" / "models" / "resume_detector.pkl"
     if model_path.exists():
         try:
-            _DETECTOR_MODEL = joblib.load(model_path)
+            with open(model_path, "rb") as f:
+                _DETECTOR_MODEL = pickle.load(f)
             return _DETECTOR_MODEL
-        except Exception as e:
-            print(f"Warning: Could not load trained detector model: {e}")
-            return None
+        except Exception:
+            try:
+                _DETECTOR_MODEL = joblib.load(model_path)
+                return _DETECTOR_MODEL
+            except Exception as e:
+                print(f"Warning: Could not load trained detector model: {e}")
+                return None
     return None
 
 
@@ -87,34 +93,43 @@ def detect_resume(text: str) -> Tuple[bool, Dict[str, any]]:
     model_data = _load_detector_model()
     if model_data is not None:
         try:
-            classifier = model_data.get('classifier')
-            vectorizer = model_data.get('vectorizer')
-            use_tfidf = model_data.get('use_tfidf', True)
-            
+            classifier = model_data.get("classifier")
+            vectorizer = model_data.get("vectorizer")
+            tfidf_only = model_data.get("tfidf_only", False)
+            use_tfidf = model_data.get("use_tfidf", True)
+
             if classifier and vectorizer:
-                # Extract handcrafted features
-                features = _extract_features_for_model(text)
-                feature_vector = np.array([list(features.values())])
-                
-                # Extract TF-IDF features if needed
-                if use_tfidf:
+                if tfidf_only or not model_data.get("use_handcrafted_features"):
+                    X = vectorizer.transform([text.lower()])
+                elif use_tfidf:
+                    features = _extract_features_for_model(text)
+                    feature_vector = np.array([list(features.values())])
                     tfidf_features = vectorizer.transform([text]).toarray()
                     X = np.hstack([feature_vector, tfidf_features])
                 else:
-                    X = feature_vector
-                
-                # Predict
+                    features = _extract_features_for_model(text)
+                    X = np.array([list(features.values())])
+
                 prediction = classifier.predict(X)[0]
                 probability = classifier.predict_proba(X)[0]
                 confidence = float(max(probability))
-                
+
                 is_resume = bool(prediction == 1)
-                reason = "Document appears to be a resume/CV (ML model)" if is_resume else "Document does not appear to be a resume/CV (ML model)"
-                
+                reason = (
+                    "Document appears to be a resume/CV (ML model)"
+                    if is_resume
+                    else "Document does not appear to be a resume/CV (ML model)"
+                )
+                matches = (
+                    _extract_features_for_model(text)
+                    if not (tfidf_only or not model_data.get("use_handcrafted_features"))
+                    else {"tfidf_only": True}
+                )
+
                 return is_resume, {
                     "reason": reason,
                     "confidence": round(confidence, 3),
-                    "matches": features,
+                    "matches": matches,
                     "method": "ml_model",
                     "prediction": int(prediction),
                     "probabilities": {

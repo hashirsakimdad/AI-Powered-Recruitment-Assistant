@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import pickle
 import re
-from typing import Dict, List, Union
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+_job_classifier = None
+_job_vectorizer = None
+_job_categories: Optional[List[str]] = None
 
 SKILL_WEIGHTS = {
     "programming": 1.2,
@@ -130,6 +136,43 @@ def compute_experience_score(resume_text: str) -> float:
     return 0.0
 
 
+def get_job_classifier() -> Tuple[Any, Any, Optional[List[str]]]:
+    global _job_classifier, _job_vectorizer, _job_categories
+    if _job_classifier is None:
+        model_path = Path(__file__).parent.parent / "training" / "models" / "job_classifier.pkl"
+        if model_path.exists():
+            with open(model_path, "rb") as f:
+                data = pickle.load(f)
+            _job_classifier = data["classifier"]
+            _job_vectorizer = data["vectorizer"]
+            _job_categories = data["categories"]
+    return _job_classifier, _job_vectorizer, _job_categories
+
+
+def predict_job_category(resume_text: str) -> Dict[str, Any]:
+    clf, vec, categories = get_job_classifier()
+    if clf is None or vec is None or not categories:
+        return {"category": "Unknown", "confidence": 0.0, "top_3": []}
+
+    try:
+        X = vec.transform([resume_text.lower()])
+        proba = clf.predict_proba(X)[0]
+        top_idx = int(proba.argmax())
+        return {
+            "category": categories[top_idx],
+            "confidence": round(float(proba[top_idx]) * 100, 1),
+            "top_3": [
+                {
+                    "category": categories[i],
+                    "confidence": round(float(proba[i]) * 100, 1),
+                }
+                for i in proba.argsort()[-3:][::-1]
+            ],
+        }
+    except Exception:
+        return {"category": "Unknown", "confidence": 0.0, "top_3": []}
+
+
 def apply_length_regularization(score: float, resume_text: str) -> float:
     """Penalize very short resumes (under 100 words)."""
     word_count = len(resume_text.split())
@@ -172,6 +215,14 @@ def score(resume_text: str, job) -> Dict[str, Union[float, str, List[str]]]:
     from ai.neural_classifier import get_neural_score
 
     neural_match = get_neural_score(resume_text, job_description)
+    predicted_category = predict_job_category(resume_text)
+
+    # Percentages for UI display (0-100).
+    skill_match = round((keyword_score / 40.0) * 100.0, 1) if keyword_score else 0.0
+    experience_match = (
+        round((experience_score / 15.0) * 100.0, 1) if experience_score else 0.0
+    )
+    keyword_match = round((semantic_score / 35.0) * 100.0, 1) if semantic_score else 0.0
 
     return {
         "score": total,
@@ -182,6 +233,10 @@ def score(resume_text: str, job) -> Dict[str, Union[float, str, List[str]]]:
         "skill_gap": missing,
         "word_count": len(resume_text.split()),
         "neural_match": neural_match,
+        "predicted_category": predicted_category,
+        "skill_match": skill_match,
+        "experience_match": experience_match,
+        "keyword_match": keyword_match,
         "breakdown_note": (
             f"keyword:{keyword_score} semantic:{semantic_score} "
             f"exp:{experience_score} fmt:{format_score}"
@@ -204,9 +259,10 @@ def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str
     semantic = float(result["semantic_score"])
     experience = float(result["experience_score"])
 
-    skill_match = round(keyword / 40 * 100, 2) if keyword else 0.0
-    experience_match = round(experience / 15 * 100, 2) if experience else 0.0
-    keyword_match = round(semantic / 35 * 100, 2) if semantic else 0.0
+    # UI percentages (keep in sync with `score()` return keys)
+    skill_match = float(result.get("skill_match") or 0.0)
+    experience_match = float(result.get("experience_match") or 0.0)
+    keyword_match = float(result.get("keyword_match") or 0.0)
 
     return {
         "score": result["score"],
@@ -222,6 +278,7 @@ def score_candidate(profile: Dict, job: Dict[str, str]) -> Dict[str, float | str
         "keyword_match": keyword_match,
         "rationale": _build_rationale(keyword, experience, semantic),
         "neural_match": result.get("neural_match"),
+        "predicted_category": result.get("predicted_category"),
         "method": "weighted_v2",
         "breakdown_note": result.get("breakdown_note", ""),
     }

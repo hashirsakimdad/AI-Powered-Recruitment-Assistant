@@ -10,6 +10,13 @@
   {% if neural.color == 'success' %}🟢{% elif neural.color == 'warning' %}🟡{% elif neural.color == 'danger' %}🔴{% endif %}
 </div>
 {% endif %}
+{% set predicted = expl.get('predicted_category') or scores.get('predicted_category') %}
+{% if predicted and predicted.get('category') and predicted.get('category') != 'Unknown' %}
+<div class="mb-2 small" style="color:var(--primary-light,#A78BFA);">
+  Your resume best matches: <strong>{{ predicted.category }}</strong>
+  ({{ predicted.confidence }}% confidence)
+</div>
+{% endif %}
 <div class="progress mb-2" style="height: 8px;">
   <div class="progress-bar bg-primary" style="width: {{ sub.score or 0 }}%"></div>
 </div>
@@ -17,9 +24,9 @@
 <p class="small text-muted">{{ expl.get('llm_summary') }}</p>
 {% endif %}
 <table class="table table-sm table-bordered" style="font-size:0.85rem;">
-  <tr><th>Skill Match</th><td>{% if expl is mapping %}{{ expl.get('skill_match', scores.get('skill_match', '—')) }}{% else %}{{ scores.get('skill_match', '—') }}{% endif %}%</td></tr>
-  <tr><th>Experience Match</th><td>{% if expl is mapping %}{{ expl.get('experience_match', scores.get('experience_match', '—')) }}{% else %}{{ scores.get('experience_match', '—') }}{% endif %}%</td></tr>
-  <tr><th>Keyword Match</th><td>{% if expl is mapping %}{{ expl.get('keyword_match', scores.get('keyword_match', '—')) }}{% else %}{{ scores.get('keyword_match', '—') }}{% endif %}%</td></tr>
+  <tr><th>Skill Match</th><td>{{ expl.get('skill_match', scores.get('skill_match', '—')) }}%</td></tr>
+  <tr><th>Experience Match</th><td>{{ expl.get('experience_match', scores.get('experience_match', '—')) }}%</td></tr>
+  <tr><th>Keyword Match</th><td>{{ expl.get('keyword_match', scores.get('keyword_match', '—')) }}%</td></tr>
 </table>
 {% set strengths = expl.get('strengths', []) if expl is mapping else [] %}
 {% if strengths %}

@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>Recruiter Dashboard — AI Recruit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -282,15 +283,13 @@
       rows.forEach(r => table.querySelector('tbody').appendChild(r));
     }
 
-    function getCookie(name) {
-      const c = document.cookie.split(';').find(x => x.trim().startsWith(name + '='));
-      return c ? decodeURIComponent(c.split('=').slice(1).join('=').trim()) : '';
-    }
-
     function updateStatus(submissionId, status) {
       fetch('/recruiter/candidate/' + submissionId + '/status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrf_token') },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content,
+        },
         body: JSON.stringify({ status })
       })
         .then(r => r.json())

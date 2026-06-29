@@ -466,9 +466,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================
 function setupRecruiterDecisionControls() {
   const statusButtons = document.querySelectorAll('.candidate-status-btn');
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-    || document.cookie.split(';').find(x => x.trim().startsWith('csrf_token='))?.split('=').slice(1).join('=').trim()
-    || '';
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = csrfMeta ? csrfMeta.content : '';
   
   statusButtons.forEach(button => {
     button.addEventListener('click', async function() {

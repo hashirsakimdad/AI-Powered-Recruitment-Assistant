@@ -47,6 +47,16 @@ def dashboard():
         sub.id: get_score_percentile(sub.id, sub.job_id) for sub in my_submissions
     }
 
+    # Debug visibility for explanation keys/values
+    # (Useful when investigating 0.0% match issues.)
+    if current_app.debug:
+        for sub in my_submissions[:10]:
+            expl = sub.explanation if isinstance(sub.explanation, dict) else None
+            if not expl:
+                continue
+            current_app.logger.info("Explanation keys: %s", list(expl.keys()))
+            current_app.logger.info("skill_match: %s", expl.get("skill_match"))
+
     return render_template(
         "candidate_dashboard.html",
         jobs=jobs.items,

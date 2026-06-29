@@ -54,5 +54,5 @@
 {% endif %}
 
 {% if gf.get('source') %}
-<p style="color:var(--text-muted);font-size:0.75rem;margin-top:0.75rem;opacity:0.7;">Powered by {{ 'Google Gemini' if gf.source == 'gemini' else 'local fallback' }}</p>
+<p style="color:var(--text-muted);font-size:0.75rem;margin-top:0.75rem;opacity:0.7;">Powered by {{ 'Groq AI' if gf.source == 'groq' else 'local fallback' }}</p>
 {% endif %}
