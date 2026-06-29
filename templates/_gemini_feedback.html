@@ -13,25 +13,35 @@
 </ul>
 {% endif %}
 
-{% if gf.get('missing_skills') %}
-<p style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.35rem;">Skills to develop</p>
-<ul style="margin:0 0 0.75rem;padding-left:0;list-style:none;color:var(--text-muted);font-size:0.88rem;">
-  {% for item in gf.get('missing_skills', []) %}
-  <li style="margin-bottom:0.5rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border-radius:var(--radius);">
-    {% if item is mapping %}
-    <strong>{{ item.get('skill', item) }}</strong>
-    {% if item.get('importance') %}
-    <span class="status-badge status-{{ 'shortlisted' if item.importance == 'high' else 'under_review' }}" style="margin-left:0.35rem;font-size:0.7rem;">{{ item.importance }}</span>
-    {% endif %}
-    {% if item.get('how_to_learn') %}
-    <div style="margin-top:0.25rem;font-size:0.82rem;">{{ item.how_to_learn }}</div>
-    {% endif %}
-    {% else %}
-    {{ item }}
-    {% endif %}
-  </li>
-  {% endfor %}
-</ul>
+{% set feedback_obj = gf %}
+{% set missing = feedback_obj.get('missing_skills', []) %}
+{% if missing %}
+<div class="skills-to-develop mt-3">
+  <strong>Skills to develop:</strong>
+  <div class="d-flex flex-wrap gap-2 mt-2">
+    {% for item in missing %}
+      {% set skill_name = item.skill if item is mapping else item %}
+      <div class="skill-card p-2 rounded"
+           style="background:rgba(239,68,68,0.1);
+                  border:1px solid rgba(239,68,68,0.3);">
+        <span class="badge"
+              style="background:rgba(239,68,68,0.2);
+                     color:#f87171;
+                     padding:4px 10px;
+                     border-radius:20px;">
+          {{ skill_name }}
+        </span>
+        <div class="small text-muted mt-1">
+          {% if item is mapping and item.how_to_learn %}
+            {{ item.how_to_learn }}
+          {% else %}
+            Search '{{ skill_name }} tutorial' on YouTube or Coursera
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
 {% endif %}
 
 {% if gf.get('next_steps') %}
