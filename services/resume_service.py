@@ -360,7 +360,7 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
     )
 
     submission.parsed_summary = parsed_profile
-    submission.explanation = {
+    explanation = {
         "keyword_score": keyword_score,
         "semantic_score": semantic_score,
         "experience_score": experience_score,
@@ -386,6 +386,11 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         "neural_match": scoring.get("neural_match"),
         "predicted_category": scoring.get("predicted_category"),
     }
+
+    print(f"Saving explanation: {explanation}")
+    print(f"skill_match value: {explanation.get('skill_match')}")
+
+    submission.explanation = explanation
     _apply_scoring_to_submission(submission, scoring)
     submission.scoring_status = "scored"
     return scoring
