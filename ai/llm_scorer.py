@@ -18,13 +18,13 @@ CV_SCORING_PROMPT = """You are an expert recruitment AI. Analyze the candidate r
 You MUST respond with ONLY a single JSON object. No markdown, no code fences, no preamble, no explanation outside JSON.
 
 Use exactly this schema:
-{
+{{
   "score": 78,
   "summary": "Brief overall assessment in 2-3 sentences.",
   "strengths": ["strength one", "strength two"],
   "weaknesses": ["weakness one", "weakness two"],
   "recommendation": "hire / consider / reject with brief reason"
-}
+}}
 
 Rules:
 - "score" must be an integer from 0 to 100 reflecting job fit.
