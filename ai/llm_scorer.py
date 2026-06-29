@@ -156,8 +156,7 @@ def analyze_cv_with_llm(
         raw_response = call_llm(prompt)
 
         if log_raw:
-            print(f"[CV SCORING] LLM response: {raw_response[:300]}")
-        logger.info("LLM response received: %s", raw_response[:500])
+            logger.info("CV SCORING LLM response: %s", raw_response[:500])
 
         parsed = parse_llm_json(raw_response)
         normalized = normalize_cv_analysis(parsed)
@@ -167,7 +166,7 @@ def analyze_cv_with_llm(
     except Exception as exc:
         logger.warning("LLM scoring failed (%s) — rule-based fallback", exc)
         if log_raw and raw_response:
-            print(f"[CV SCORING] Failed response: {raw_response[:300]}")
+            logger.warning("CV SCORING failed response: %s", raw_response[:300])
         fallback = rule_based_analysis(profile, job)
         fallback["llm_error"] = str(exc)
         return fallback, raw_response or str(exc)
