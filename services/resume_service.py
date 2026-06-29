@@ -256,6 +256,12 @@ def process_resume(
     )
     scoring["keyword_match"] = round((semantic_score / 35.0) * 100.0, 1) if semantic_score else 0.0
 
+    logger.info("skill_match: %.1f%%", (keyword_score / 40.0) * 100.0 if keyword_score else 0.0)
+    logger.info(
+        "experience_match: %.1f%%",
+        (experience_score / 15.0) * 100.0 if experience_score else 0.0,
+    )
+
     # Explanation schema for UI (top-level keys expected by templates)
     explanation = {
         "keyword_score": keyword_score,
@@ -342,6 +348,12 @@ def rescore_submission(submission: ResumeSubmission, job: JobPosting) -> dict:
         round((experience_score / 15.0) * 100.0, 1) if experience_score else 0.0
     )
     scoring["keyword_match"] = round((semantic_score / 35.0) * 100.0, 1) if semantic_score else 0.0
+
+    logger.info("skill_match: %.1f%%", (keyword_score / 40.0) * 100.0 if keyword_score else 0.0)
+    logger.info(
+        "experience_match: %.1f%%",
+        (experience_score / 15.0) * 100.0 if experience_score else 0.0,
+    )
 
     submission.parsed_summary = parsed_profile
     submission.explanation = {
