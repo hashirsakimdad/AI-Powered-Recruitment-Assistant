@@ -4,8 +4,9 @@ import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFError
 
 from app_helpers import ensure_breakdown_columns
 from blueprints import register_blueprints
@@ -36,6 +37,12 @@ def create_app(config_overrides=None):
             return render_template("login.html"), 429
         flash("Too many requests. Please wait a moment and try again.", "warning")
         return redirect(request.referrer or url_for("auth.login")), 429
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        return jsonify(
+            {"error": "CSRF token missing or invalid. Please refresh the page."}
+        ), 400
 
     @app.before_request
     def ensure_upload_dir():

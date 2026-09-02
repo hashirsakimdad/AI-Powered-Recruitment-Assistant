@@ -43,7 +43,42 @@
 <p class="small text-muted mb-1"><strong>Rationale:</strong></p>
 <ul class="small">{% for r in rationale %}<li>{{ r }}</li>{% endfor %}</ul>
 {% endif %}
-{% set gaps = sub.skill_gap|default('[]', true)|from_json %}
-{% if gaps %}
-<p class="small mb-0"><strong>You're missing:</strong> {{ gaps|join(', ') }}</p>
-{% endif %}
+<div class="skills-to-develop mt-3">
+  <strong>Skills to develop:</strong>
+  <div class="d-flex flex-wrap gap-2 mt-2">
+    {% if expl.skill_gap %}
+      {% for skill in expl.skill_gap %}
+        <div class="skill-card p-2 rounded"
+             style="background:rgba(239,68,68,0.1);
+                    border:1px solid rgba(239,68,68,0.3);">
+          <span class="badge"
+                style="background:rgba(239,68,68,0.2);
+                       color:#f87171;
+                       padding:4px 10px;
+                       border-radius:20px;">
+            {{ skill }}
+          </span>
+          <div class="small text-muted mt-1">
+            Search '{{ skill }} tutorial' on YouTube or Coursera
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+<div class="missing-skills mt-2">
+  <strong>You're missing:</strong>
+  <div class="d-flex flex-wrap gap-1 mt-1">
+    {% if expl.skill_gap %}
+      {% for skill in expl.skill_gap %}
+        <span class="badge"
+              style="background:rgba(239,68,68,0.2);
+                     color:#f87171;
+                     padding:4px 10px;
+                     border-radius:20px;">
+          {{ skill }}
+        </span>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>

@@ -33,9 +33,9 @@ def generate_fallback_feedback(
             {
                 "skill": skill,
                 "importance": "high",
-                "how_to_learn": "Online courses recommended",
+                "how_to_learn": f"Search '{skill} tutorial' on YouTube or Coursera",
             }
-            for skill in missing_skills[:3]
+            for skill in missing_skills[:6]
         ],
         "next_steps": [
             "Add missing skills to resume",
@@ -104,38 +104,36 @@ def generate_feedback(profile: Dict, job: Dict[str, str]) -> Dict[str, Any]:
     semantic_score = float(scoring.get("semantic_score", 0))
     experience_score = float(scoring.get("experience_score", 0))
 
-    required_skills = [
-        s.strip() for s in job.get("required_skills", "").split(",") if s.strip()
+    skill_gap = scoring.get("skill_gap", [])
+    # Normalize if accidentally one long string
+    if len(skill_gap) == 1 and " " in skill_gap[0]:
+        if "," in skill_gap[0]:
+            skill_gap = [s.strip() for s in skill_gap[0].split(",") if s.strip()]
+        else:
+            skill_gap = [s.strip() for s in skill_gap[0].split() if s.strip()]
+
+    missing_skills = [
+        {
+            "skill": s,
+            "importance": "high",
+            "how_to_learn": f"Search '{s} tutorial' on YouTube or Coursera",
+        }
+        for s in skill_gap[:6]
     ]
-    required_lower = {s.lower() for s in required_skills}
-    resume_skills = set()
-    for line in profile.get("skills", []):
-        for token in line.split(","):
-            token = token.strip().lower()
-            if token:
-                resume_skills.add(token)
-    missing = sorted(required_lower - resume_skills)
 
     groq_text = generate_groq_feedback(profile, job, scoring)
     if groq_text:
         feedback_data = {
             "overall_assessment": groq_text.strip(),
             "strengths": [],
-            "missing_skills": [
-                {
-                    "skill": skill,
-                    "importance": "high",
-                    "how_to_learn": "Explore tutorials and hands-on projects.",
-                }
-                for skill in missing[:3]
-            ],
+            "missing_skills": missing_skills,
             "next_steps": [],
             "interview_tips": "",
             "improvement_potential": "",
             "source": "groq",
         }
     else:
-        feedback_data = generate_fallback_feedback(overall_score, missing)
+        feedback_data = generate_fallback_feedback(overall_score, skill_gap)
 
     suggestions = feedback_data.get("next_steps", [])
     summary = feedback_data.get("overall_assessment", "")
