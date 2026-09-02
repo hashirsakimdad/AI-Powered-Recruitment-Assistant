@@ -284,18 +284,34 @@
     }
 
     function updateStatus(submissionId, status) {
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      const csrfToken = csrfMeta ? csrfMeta.content : '';
       fetch('/recruiter/candidate/' + submissionId + '/status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content,
+          'X-CSRFToken': csrfToken,
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ status })
       })
-        .then(r => r.json())
-        .then(d => {
-          if (d.success) showToast('Status updated to: ' + status.replace(/_/g, ' '), 'success');
-          else showToast(d.error || 'Update failed', 'danger');
+        .then(async (response) => {
+          let data;
+          try {
+            data = await response.json();
+          } catch {
+            showToast('Session/security token expired — please refresh the page', 'danger');
+            return;
+          }
+          if (!response.ok) {
+            showToast(data.error || 'Update failed', 'danger');
+            return;
+          }
+          if (data.success) {
+            showToast('Status updated to: ' + status.replace(/_/g, ' '), 'success');
+          } else {
+            showToast(data.error || 'Update failed', 'danger');
+          }
         })
         .catch(() => showToast('Failed to update status', 'danger'));
     }

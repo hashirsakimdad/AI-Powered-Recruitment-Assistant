@@ -488,11 +488,21 @@ function setupRecruiterDecisionControls() {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken,
           },
+          credentials: 'same-origin',
           body: JSON.stringify({ status: newStatus })
         });
-        
-        const data = await response.json();
-        
+
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error('Session/security token expired — please refresh the page');
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to update status');
+        }
+
         if (data.success) {
           // Show success message
           const alert = document.createElement('div');
